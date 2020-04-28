@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='PDS_Project',
+    name='nextbike',
     version='0.0.1dev1',
     description="Semester Project -- Programming Data Science",
     author="Student",
