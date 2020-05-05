@@ -4,11 +4,15 @@ import os
 import pickle
 
 
-def read_file(path=os.path.join(get_data_path(), "input/<My_data>.csv")):
+def read_file(filename):
     try:
-        df = pd.read_csv(path)
+
+        df = pd.read_csv(filename, dtype=str, index_col=0)
+
         return df
+
     except FileNotFoundError:
+
         print("Data file not found. Path was " + path)
 
 
