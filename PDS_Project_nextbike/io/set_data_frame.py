@@ -85,3 +85,13 @@ def create_df(base):
     trip_wduration["End_Longitude"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_lng"].values)
 
     return trip_wduration
+
+
+# method to perform cleaning data frame from wrong data.
+def clean_df(df):
+
+    df = pd.DataFrame(df)
+    missingi_data_frame = df[df["place"]]
+    short_trip = df[(df["duration"] <= dt.timedelta(minutes=3)) & (df["End_position_UID"] == df["Start_position_UID"])]
+    # drop short values from data frame
+    df.drop(short_trip.index, inplace=True)
