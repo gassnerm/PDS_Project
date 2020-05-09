@@ -6,22 +6,23 @@ from .input import read_file
 
 def create_df(base):
 
-    base.isnull().any()
+    # drop na values and wrong data
+    base = pd.DataFrame(clean_df(base))
+
+    # parse string series datetime to datetime
     base["datetime"] = pd.to_datetime(base["datetime"], format="%Y-%m-%d %H:%M:%S")
 
-    # read all data that contains trips from data set
+    # read all data that contains trips from data set drop all first and last rows
     base_trips = base[(base["trip"].str.contains("(start|end)"))]
 
-    base["p_number"].value_counts()
 
     # sort the values of the df
     base_trips = pd.DataFrame(base_trips.sort_values(by=['b_number', 'datetime']), index=None).reset_index()
 
     # drop index column
     base_trips.drop(["index"], axis=1, inplace=True)
-    base_trips
 
-    # Find the start bookings in data set
+    # Find the start and end bookings in data set
     start_rows = base_trips[list(map(lambda x: base_trips.loc[x]["trip"] == "start", base_trips.index))]
     end_rows = base_trips[list(map(lambda x: base_trips.loc[x]["trip"] == "end", base_trips.index))]
 
@@ -31,7 +32,8 @@ def create_df(base):
 
     wrong_ends = pd.Series(list(filter(lambda y: False if (y == end_rows.index[-1]) else base_trips.loc[int(y+1)]["trip"] == "end",
                                        end_rows.index)))
-
+    print(wrong_ends)
+    exit(1)
     # Append Index to delete to one list
     if wrong_ends.empty:
         wrong_series = pd.Series(wrong_starts)
@@ -84,4 +86,39 @@ def create_df(base):
     trip_wduration["End_Latitude"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_lat"].values)
     trip_wduration["End_Longitude"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_lng"].values)
 
+    # drop trips that are shorter or 3 minutes long and did n change location
+    drop_short_trips(trip_wduration)
+
     return trip_wduration
+
+
+# method to perform cleaning data frame from wrong data.
+def drop_short_trips(df):
+
+    df = pd.DataFrame(df)
+    short_trip = df[(df["duration"] <= dt.timedelta(minutes=3)) & (df["End_position_UID"] == df["Start_position_UID"])]
+    # drop short values from data frame
+    df.drop(short_trip.index, inplace=True)
+
+
+def clean_df(df):
+    print(df)
+    # create data frame
+    df = pd.DataFrame(df)
+
+    # take all columns to control for na values except p_number contain 0 for bike place
+    null_columns = np.array(list(filter(lambda x: (str(x) != "p_number"), df.columns)))
+
+    print(null_columns)
+
+    # drop all rows that contains na values in the columns
+    df.loc[:, null_columns].dropna(axis=0, subset=null_columns, inplace=True)
+
+    # drop all rows that contains recordings and missing island in place name
+    # recording_df = pd.DataFrame(df[df["p_name"].str.contains("^(recording)")])
+    missing_island = pd.DataFrame(df[df["p_name"].str.contains("^(Missing)")])
+
+    # df.drop(recording_df.index, inplace=True)
+    df.drop(missing_island.index, inplace=True)
+
+    return df
