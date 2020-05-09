@@ -15,7 +15,6 @@ def create_df(base):
     # read all data that contains trips from data set drop all first and last rows
     base_trips = base[(base["trip"].str.contains("(start|end)"))]
 
-    base["p_number"].value_counts()
 
     # sort the values of the df
     base_trips = pd.DataFrame(base_trips.sort_values(by=['b_number', 'datetime']), index=None).reset_index()
@@ -33,7 +32,8 @@ def create_df(base):
 
     wrong_ends = pd.Series(list(filter(lambda y: False if (y == end_rows.index[-1]) else base_trips.loc[int(y+1)]["trip"] == "end",
                                        end_rows.index)))
-
+    print(wrong_ends)
+    exit(1)
     # Append Index to delete to one list
     if wrong_ends.empty:
         wrong_series = pd.Series(wrong_starts)
@@ -115,10 +115,10 @@ def clean_df(df):
     df.loc[:, null_columns].dropna(axis=0, subset=null_columns, inplace=True)
 
     # drop all rows that contains recordings and missing island in place name
-    recording_df = pd.DataFrame(df[df["p_name"].str.contains("^(recording)")])
+    # recording_df = pd.DataFrame(df[df["p_name"].str.contains("^(recording)")])
     missing_island = pd.DataFrame(df[df["p_name"].str.contains("^(Missing)")])
 
-    df.drop(recording_df.index, inplace=True)
+    # df.drop(recording_df.index, inplace=True)
     df.drop(missing_island.index, inplace=True)
 
     return df
