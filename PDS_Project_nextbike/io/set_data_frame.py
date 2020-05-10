@@ -63,7 +63,7 @@ def create_df(base):
 
     # create the new data frame for analysis, rename columns added new columns
     trip_wduration = pd.DataFrame(start_trips.rename(columns={"b_number": "Bike_number", "p_lat": "Start_Latitude",
-                                                              "p_lng": "Start_Longitude", "p_spot": "Station_position",
+                                                              "p_lng": "Start_Longitude", "p_spot": "Start_Station_position",
                                                               "datetime": "Starttime", "p_place_type": "Type_of_Place",
                                                               "p_spot": "Station_position", "p_bike": "Bike_position",
                                                               "p_number": "Station_number",
@@ -79,15 +79,15 @@ def create_df(base):
     trip_wduration["duration"] = cast_timedelta_to_number(durations)
     trip_wduration["weekday"] = weekday
     trip_wduration["Bike_number"] = start_trips["b_number"]
-
-    trip_wduration["Endtime"] = trip_wduration["Starttime"] + (pd.to_timedelta(trip_wduration["duration"]))
+    trip_wduration["End_Station_position"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_spot"].values)
+    trip_wduration["End_time"] = pd.Series(index=trip_wduration.index, data=end_rows_new["datetime"].values)
     trip_wduration["End_position_UID"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_uid"].values)
     trip_wduration["End_Latitude"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_lat"].values)
     trip_wduration["End_Longitude"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_lng"].values)
 
     # drop trips that are shorter or 3 minutes long and did n change location
     drop_short_trips(trip_wduration)
-    create_statistics(trip_wduration)
+    # create_statistics(trip_wduration)
     return trip_wduration
 
 
