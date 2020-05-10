@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import datetime as dt
 from .input import read_file
-
+from .utils import *
+from .createStatisics import create_statistics
 
 def create_df(base):
 
@@ -14,7 +15,6 @@ def create_df(base):
 
     # read all data that contains trips from data set drop all first and last rows
     base_trips = base[(base["trip"].str.contains("(start|end)"))]
-
 
     # sort the values of the df
     base_trips = pd.DataFrame(base_trips.sort_values(by=['b_number', 'datetime']), index=None).reset_index()
@@ -32,8 +32,7 @@ def create_df(base):
 
     wrong_ends = pd.Series(list(filter(lambda y: False if (y == end_rows.index[-1]) else base_trips.loc[int(y+1)]["trip"] == "end",
                                        end_rows.index)))
-    print(wrong_ends)
-    exit(1)
+
     # Append Index to delete to one list
     if wrong_ends.empty:
         wrong_series = pd.Series(wrong_starts)
@@ -77,7 +76,7 @@ def create_df(base):
     weekday = list(map(lambda x: trip_wduration.loc[x]["Starttime"].weekday() < 5, trip_wduration.index))
 
     trip_wduration.drop(["trip", "p_name"], axis=1, inplace=True)
-    trip_wduration["duration"] = durations
+    trip_wduration["duration"] = cast_timedelta_to_number(durations)
     trip_wduration["weekday"] = weekday
     trip_wduration["Bike_number"] = start_trips["b_number"]
 
@@ -88,37 +87,8 @@ def create_df(base):
 
     # drop trips that are shorter or 3 minutes long and did n change location
     drop_short_trips(trip_wduration)
-
+    create_statistics(trip_wduration)
     return trip_wduration
 
 
-# method to perform cleaning data frame from wrong data.
-def drop_short_trips(df):
 
-    df = pd.DataFrame(df)
-    short_trip = df[(df["duration"] <= dt.timedelta(minutes=3)) & (df["End_position_UID"] == df["Start_position_UID"])]
-    # drop short values from data frame
-    df.drop(short_trip.index, inplace=True)
-
-
-def clean_df(df):
-    print(df)
-    # create data frame
-    df = pd.DataFrame(df)
-
-    # take all columns to control for na values except p_number contain 0 for bike place
-    null_columns = np.array(list(filter(lambda x: (str(x) != "p_number"), df.columns)))
-
-    print(null_columns)
-
-    # drop all rows that contains na values in the columns
-    df.loc[:, null_columns].dropna(axis=0, subset=null_columns, inplace=True)
-
-    # drop all rows that contains recordings and missing island in place name
-    # recording_df = pd.DataFrame(df[df["p_name"].str.contains("^(recording)")])
-    missing_island = pd.DataFrame(df[df["p_name"].str.contains("^(Missing)")])
-
-    # df.drop(recording_df.index, inplace=True)
-    df.drop(missing_island.index, inplace=True)
-
-    return df
