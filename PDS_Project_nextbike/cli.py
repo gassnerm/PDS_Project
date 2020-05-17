@@ -1,6 +1,6 @@
 import click
 from . import model
-from .io import input, set_data_frame, output
+from .io import input, set_data_frame, output, test
 from datetime import datetime
 
 
@@ -9,7 +9,8 @@ from datetime import datetime
 @click.option('--predict/--no-prediction', default=False, help="do something!")
 @click.option('--transform/--no-prediction', default=False, help="do something!")
 @click.argument('csv_file', type=click.File("rb"))
-def main(train, transform, csv_file, predict):
+@click.option('--testing_code/--no_testing', default=False, help="Can be used for prototyping")
+def main(train, transform, csv_file, predict, testing_code):
     if train:
         model.train()
     else:
@@ -28,6 +29,10 @@ def main(train, transform, csv_file, predict):
     if predict:
         print("Hallo")
 
+    if testing_code:
+        df = input.read_file(csv_file)
+        print("Testing class used")
+        test.testing_code(df)
 
 if __name__ == '__main__':
     main()
