@@ -98,7 +98,12 @@ def create_df(base):
 
     # Drop negative coordinates
     trip_wduration = cleaning_new_df(trip_wduration)
-    # create_statistics(trip_wduration)
+
+    geo_data = read_file("C:/Users/manue/backup_zipcodes")
+    # create the zip code column for trips
+    trip_wduration = create_zip_code_data(trip_wduration, geo_data)
+    trip_wduration.drop(labels="Coordinates", axis=1, inplace=True)
+
     return trip_wduration
 
 

@@ -30,8 +30,9 @@ def main(train, transform, csv_file, predict, testing_code):
         print("Hallo")
 
     if testing_code:
+        df = input.read_file(csv_file)
         print("Testing class used")
-        test.testing_code(csv_file)
+        test.testing_code(df)
 
 if __name__ == '__main__':
     main()

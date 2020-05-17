@@ -68,10 +68,12 @@ def cleaning_new_df(df):
     return df
 
 
-def create_zip_code_data(csv_file, geo_data):
+def create_zip_code_data(df, geo_data):
 
-    df_new = pd.read_csv(csv_file, index_col=0, dtype=str)
-    zip_code = pd.DataFrame(pd.read_csv(geo_data, index_col=0), dtype=str)
+    df_new = pd.DataFrame(df)
+    zip_code = pd.DataFrame(geo_data)
+
+    print(df_new)
 
     # create column for join
     df_new["Coordinates"] = df_new["Start_Latitude"].str.cat(df_new["Start_Longitude"], sep=", ")
@@ -84,7 +86,7 @@ def create_zip_code_data(csv_file, geo_data):
     df_new = df_new.drop(wrong_coordinates)
 
     # drop bookings they are not in frankfurt
-    not_in_frankfurt = df_new[(df_new["zipcodes"].astype(int) > 65936) | (df_new_2["zipcodes"].astype(int) < 60306)].index
+    not_in_frankfurt = df_new[(df_new["zipcodes"].astype(int) > 65936) | (df_new["zipcodes"].astype(int) < 60306)].index
     df_new = df_new.drop(not_in_frankfurt)
-
+    print(df_new)
     return df_new
