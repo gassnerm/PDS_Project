@@ -16,26 +16,29 @@ def get_data_path():
 # Cast the duration from timedelta to number of minutes
 def cast_timedelta_to_number(series_timedelta):
 
-    df = pd.DataFrame(series_timedelta)
+    print(series_timedelta.keys())
+    print(series_timedelta)
     # return a series with duration in minutes for each trip
-    return pd.Series(data=list(map(lambda x: pd.to_timedelta(df.loc[x]["duration"]).total_seconds()/60, df.index)))
+    return pd.Series(data=list(map(lambda x: pd.to_timedelta(series_timedelta[x]).total_seconds()/60, series_timedelta.index)))
 
 
 # method to perform cleaning data frame from wrong data.
 def drop_short_trips(df):
 
     df = pd.DataFrame(df)
-    short_trip = df[(df["duration"] <= dt.timedelta(minutes=3)) & (df["End_position_UID"] == df["Start_position_UID"])]
+
+    short_trip = df[list(map(lambda x: (df.loc[x]["duration"] <= float(180)) & (df.loc[x]["End_position_UID"] == df.loc[x]["Start_position_UID"]), df.index))]
     # drop short values from data frame
     df.drop(short_trip.index, inplace=True)
+    return df
 
 
 # Clean df from wrong data
 def clean_df(df):
     print(df)
     # create data frame
-    df = pd.DataFrame(df)
 
+    df = pd.DataFrame(df)
     # take all columns to control for na values except p_number contain 0 for bike place
     null_columns = np.array(list(filter(lambda x: (str(x) != "p_number"), df.columns)))
 
@@ -43,10 +46,45 @@ def clean_df(df):
     df.loc[:, null_columns].dropna(axis=0, subset=null_columns, inplace=True)
 
     # drop all rows that contains recordings and missing island in place name
-    # recording_df = pd.DataFrame(df[df["p_name"].str.contains("^(recording)")])
     missing_island = pd.DataFrame(df[df["p_name"].str.contains("^(Missing)")])
-
-    # df.drop(recording_df.index, inplace=True)
     df.drop(missing_island.index, inplace=True)
 
     return df
+
+
+# Cleaning of new data frame
+def cleaning_new_df(df):
+
+    df = pd.DataFrame(df)
+
+    # Drop trips with recording in place name
+    recording_df = pd.DataFrame(df[df["Start_Place"].str.contains("^(recording)")])
+    df.drop(recording_df.index, inplace=True)
+
+    # Drop trip with negative lat or long position in england
+    negative_df = pd.DataFrame(df[(df["Start_Latitude"].astype(float) < 0) | (df["Start_Longitude"].astype(float) < 0)])
+    df.drop(negative_df.index, inplace=True)
+
+    return df
+
+
+def create_zip_code_data(csv_file, geo_data):
+
+    df_new = pd.read_csv(csv_file, index_col=0, dtype=str)
+    zip_code = pd.DataFrame(pd.read_csv(geo_data, index_col=0), dtype=str)
+
+    # create column for join
+    df_new["Coordinates"] = df_new["Start_Latitude"].str.cat(df_new["Start_Longitude"], sep=", ")
+
+    # join the zip code column based on lat long Coordinates
+    df_new = df_new.join(zip_code, on=["Coordinates"], lsuffix="_s", )
+
+    # drop trips with wrong coordinates
+    wrong_coordinates = df_new[df_new["zipcodes"].astype(str).str.contains("^(?![0-9]{5})")].index
+    df_new = df_new.drop(wrong_coordinates)
+
+    # drop bookings they are not in frankfurt
+    not_in_frankfurt = df_new[(df_new["zipcodes"].astype(int) > 65936) | (df_new_2["zipcodes"].astype(int) < 60306)].index
+    df_new = df_new.drop(not_in_frankfurt)
+
+    return df_new

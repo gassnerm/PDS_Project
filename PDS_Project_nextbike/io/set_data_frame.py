@@ -5,6 +5,7 @@ from .input import read_file
 from .utils import *
 from .createStatisics import create_statistics
 
+
 def create_df(base):
 
     # drop na values and wrong data
@@ -58,25 +59,29 @@ def create_df(base):
     start_trips = base_trips.iloc[starts_has_end]
 
     # calculate duration
-    durations = list(map(lambda x: end_rows_new.iloc[x]["datetime"] - start_rows_new.iloc[x]["datetime"],
-                         range(0, len(start_rows_new))))
+    durations = pd.Series(list(map(lambda x: end_rows_new.iloc[x]["datetime"] - start_rows_new.iloc[x]["datetime"],
+                         range(0, len(start_rows_new)))))
 
     # create the new data frame for analysis, rename columns added new columns
-    trip_wduration = pd.DataFrame(start_trips.rename(columns={"b_number": "Bike_number", "p_lat": "Start_Latitude",
-                                                              "p_lng": "Start_Longitude", "p_spot": "Start_Station_position",
-                                                              "datetime": "Starttime", "p_place_type": "Type_of_Place",
-                                                              "p_spot": "Station_position", "p_bike": "Bike_position",
+    trip_wduration = pd.DataFrame(start_trips.rename(columns={"p_name": "Start_Place", "b_number": "Bike_number",
+                                                              "p_lat": "Start_Latitude",
+                                                              "p_lng": "Start_Longitude",
+                                                              "p_spot": "Start_Station_position",
+                                                              "datetime": "Starttime",
+                                                              "p_spot": "Station_position",
+                                                              "p_bike": "Bike_position",
                                                               "p_number": "Station_number",
                                                               "p_uid": "Start_position_UID",
-                                                              "p_bikes": "Bikes_on_position",
-                                                              "b_bike_type": "Bikes_type"}))
+                                                              "p_bikes": "Bikes_on_position"
+                                                              }))
 
     # Calculate if booking is on weekday
     print(trip_wduration)
     weekday = list(map(lambda x: trip_wduration.loc[x]["Starttime"].weekday() < 5, trip_wduration.index))
 
-    trip_wduration.drop(["trip", "p_name"], axis=1, inplace=True)
-    trip_wduration["duration"] = cast_timedelta_to_number(durations)
+    trip_wduration.drop(["trip", "p_place_type", "b_bike_type"], axis=1, inplace=True)
+    trip_wduration["duration"] = pd.Series(index=trip_wduration.index, data=cast_timedelta_to_number(durations).values)
+    trip_wduration["duration"] = trip_wduration["duration"]
     trip_wduration["weekday"] = weekday
     trip_wduration["Bike_number"] = start_trips["b_number"]
     trip_wduration["End_Station_position"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_spot"].values)
@@ -84,9 +89,15 @@ def create_df(base):
     trip_wduration["End_position_UID"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_uid"].values)
     trip_wduration["End_Latitude"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_lat"].values)
     trip_wduration["End_Longitude"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_lng"].values)
+    trip_wduration["End_Station_number"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_number"].values)
+
 
     # drop trips that are shorter or 3 minutes long and did n change location
-    drop_short_trips(trip_wduration)
+    print(trip_wduration)
+    trip_wduration = drop_short_trips(trip_wduration)
+
+    # Drop negative coordinates
+    trip_wduration = cleaning_new_df(trip_wduration)
     # create_statistics(trip_wduration)
     return trip_wduration
 

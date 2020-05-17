@@ -13,7 +13,7 @@ def read_file(filename):
 
     except FileNotFoundError:
 
-        print("Data file not found. Path was " + path)
+        print("Data file not found. Path was " + filename)
 
 
 def read_model():
