@@ -7,7 +7,7 @@ setup(
     author="Student",
     author_email="gassnerm@smail.uni-koeln.de",
     packages=["PDS_Project_nextbike"],
-    install_requires=['pandas', 'scikit-learn', 'click', 'numpy'],
+    install_requires=['pandas', 'scikit-learn', 'click', 'numpy', 'matplotlib'],
     entry_points={
         'console_scripts': ['PDS_Project_nextbike=PDS_Project_nextbike.cli:main']
     }
