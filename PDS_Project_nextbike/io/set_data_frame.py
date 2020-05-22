@@ -56,22 +56,22 @@ def create_df(base):
                                                               "p_lat": "Start_Latitude",
                                                               "p_lng": "Start_Longitude",
                                                               "p_spot": "Start_Station_position",
-                                                              "datetime": "Starttime",
+                                                              "datetime": "Start_Time",
                                                               "p_spot": "Station_position",
                                                               "p_bike": "Bike_position",
-                                                              "p_number": "Station_number",
+                                                              "p_number": "Start_Station",
                                                               "p_uid": "Start_position_UID",
                                                               "p_bikes": "Bikes_on_position"
                                                               }))
 
     # Calculate if booking is on weekday
     print(trip_wduration)
-    weekday = (pd.DatetimeIndex(trip_wduration["Starttime"]).dayofweek < 5)
+    weekday = (pd.DatetimeIndex(trip_wduration["Start_Time"]).dayofweek < 5)
 
-    trip_wduration.drop(["trip", "p_place_type", "b_bike_type"], axis=1, inplace=True)
-    trip_wduration["duration"] = pd.Series(index=trip_wduration.index, data=cast_timedelta_to_number(durations).values)
-    trip_wduration["duration"] = trip_wduration["duration"]
-    trip_wduration["weekday"] = weekday
+
+    trip_wduration["Duration"] = pd.Series(index=trip_wduration.index, data=cast_timedelta_to_number(durations).values)
+    trip_wduration["Duration"] = trip_wduration["Duration"]
+    trip_wduration["Weekday"] = weekday
     trip_wduration["Bike_number"] = starts_has_end["b_number"]
     trip_wduration["End_Station_position"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_spot"].values)
     trip_wduration["End_time"] = pd.Series(index=trip_wduration.index, data=end_rows_new["datetime"].values)
@@ -98,7 +98,18 @@ def create_df(base):
     trip_wduration.drop(labels="Coordinates", axis=1, inplace=True)
 
     # drop columns based on box plot whiskers
-    #trip_wduration = drop_outlier(trip_wduration)
+    # trip_wduration = drop_outlier(trip_wduration)
+
+    # drop not needed columns
+    trip_wduration.drop(["trip", "p_place_type", "b_bike_type", "Bikes_on_position", "Start_position_UID", "Station_position",
+                         "Start_Place", "Bike_position", "End_position_UID", "End_Station_position"], axis=1, inplace=True)
+
+    # Set schedule for columns
+    cols = trip_wduration.columns.tolist()
+    cols = cols[1:2] + cols[0:1] + cols[2:3] + cols[4:5] + cols[7:8] + cols[8:9] + cols[9:10] + cols[5:6] + cols[6:7] + \
+           cols[3:4] + cols[-2:-1] + cols[-1:]
+
+    trip_wduration = trip_wduration[cols]
 
     print("Finish", trip_wduration)
     return trip_wduration
