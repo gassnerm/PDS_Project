@@ -29,16 +29,6 @@ def create_df(base):
 
     wrong_starts = pd.Series((base_trips[base_trips['trip'] == base_trips['trip'].shift(-1)]["trip"]))
 
-    # wrong_ends = pd.Series(list(filter(lambda y: False if (y == end_rows.index[-1]) else base_trips.loc[int(y-1)]["trip"] == "end",
-                                     #  end_rows.index)))
-
-    # Append Index to delete to one list
-    # if wrong_ends.empty:
-        # wrong_series = pd.Series(wrong_starts)
-    #else:
-        #wrong_series = pd.Series(wrong_starts.append(wrong_ends))
-    print(wrong_starts)
-
     # drop redundant id start and reset index to get right index shift
     base_trips.drop(wrong_starts.index, axis=0, inplace=True)
     print("After dropping doppel starts and ends ", base_trips)
@@ -91,7 +81,7 @@ def create_df(base):
     trip_wduration["End_Station_number"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_number"].values)
 
     # drop trips that are shorter or 3 minutes long and did n change location
-    trip_wduration = drop_short_trips(trip_wduration)
+    trip_wduration = drop_short_long_trips(trip_wduration)
     print("Drop to short trips ", trip_wduration)
 
     # Drop negative coordinates
@@ -99,7 +89,7 @@ def create_df(base):
     print("Drop negative coorindinates ", trip_wduration)
 
     # read geo data
-    geo_data = read_file("data/backup_zipcodes")
+    geo_data = read_file("data/backup_zipcodes.csv")
 
     # create the zip code column for trips
     trip_wduration = create_zip_code_data(trip_wduration, geo_data)
@@ -108,7 +98,7 @@ def create_df(base):
     trip_wduration.drop(labels="Coordinates", axis=1, inplace=True)
 
     # drop columns based on box plot whiskers
-    trip_wduration = drop_outlier(trip_wduration)
+    #trip_wduration = drop_outlier(trip_wduration)
 
     print("Finish", trip_wduration)
     return trip_wduration

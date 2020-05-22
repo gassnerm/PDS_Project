@@ -4,6 +4,7 @@ import datetime as dt
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def get_data_path():
     if os.path.isdir(os.path.join(os.getcwd(), 'data')):
         return os.path.join(os.getcwd(), 'data')
@@ -23,15 +24,18 @@ def cast_timedelta_to_number(series_timedelta):
 
 
 # method to perform cleaning data frame from wrong data.
-def drop_short_trips(df):
+def drop_short_long_trips(df):
 
     df = pd.DataFrame(df)
 
     # search for trips where the duration is under or equal 3 minutes and the position doesnt changed
     short_trip = df[(df["duration"] <= float(3)) & (df["End_position_UID"] == df["Start_position_UID"])]
+    long_trips = df[(df["duration"] > float(120))]
 
     # drop short values from data frame
     df.drop(short_trip.index, inplace=True)
+    df.drop(long_trips.index, inplace=True)
+
     return df
 
 
@@ -97,39 +101,42 @@ def create_zip_code_data(df, geo_data):
 def drop_outlier(df):
     print(df)
 
-    # Extract the month from date
+    # extract the month out of date
     df["month"] = df["Starttime"].astype(str).str.extract(pat="(-[0-9]{2}-)")
+    df["month"] = df["month"].str.replace("-*-", "")
 
-    # Separate the df by month of day
-    Stat_Ja = df[df["month"] == "-01-"]
-    Stat_Fe = df[df["month"] == "-02-"]
-    Stat_Ma = df[df["month"] == "-03-"]
-    Stat_Ap = df[df["month"] == "-04-"]
-    Stat_May = df[df["month"] == "-05-"]
-    Stat_Ju = df[df["month"] == "-06-"]
-    Stat_Jul = df[df["month"] == "-07-"]
-    Stat_Au = df[df["month"] == "-08-"]
-    Stat_Se = df[df["month"] == "-09-"]
-    Stat_Oc = df[df["month"] == "-10-"]
-    Stat_No = df[df["month"] == "-11-"]
-    Stat_De = df[df["month"] == "-12-"]
+    # Separate the df by month
+    Stat_Ja = df[df["month"] == "01"]
+    Stat_Fe = df[df["month"] == "02"]
+    Stat_Ma = df[df["month"] == "03"]
+    Stat_Ap = df[df["month"] == "04"]
+    Stat_May = df[df["month"] == "05"]
+    Stat_Ju = df[df["month"] == "06"]
+    Stat_Jul = df[df["month"] == "07"]
+    Stat_Au = df[df["month"] == "08"]
+    Stat_Se = df[df["month"] == "09"]
+    Stat_Oc = df[df["month"] == "10"]
+    Stat_No = df[df["month"] == "11"]
+    Stat_De = df[df["month"] == "12"]
 
     fig, ax = plt.subplots(nrows=3, ncols=4, figsize=(20, 5))
 
-    result_Januar = ax[0][0].boxplot(Stat_Ja["duration"].astype(float), whis=2)
-    result_Februar = ax[0][1].boxplot(Stat_Fe["duration"].astype(float), whis=2)
-    result_March = ax[0][2].boxplot(Stat_Ma["duration"].astype(float), whis=2)
+    result_Januar = ax[0][0].boxplot(Stat_Ja["duration"].astype(float))
+    result_Februar = ax[0][1].boxplot(Stat_Fe["duration"].astype(float))
+    result_March = ax[0][2].boxplot(Stat_Ma["duration"].astype(float))
 
-    result_April = ax[0][3].boxplot(Stat_Ap["duration"].astype(float), whis=2)
-    result_May = ax[1][0].boxplot(Stat_May["duration"].astype(float), whis=2)
-    result_June = ax[1][1].boxplot(Stat_Ju["duration"].astype(float), whis=2)
+    result_April = ax[0][3].boxplot(Stat_Ap["duration"].astype(float))
+    result_May = ax[1][0].boxplot(Stat_May["duration"].astype(float))
+    result_June = ax[1][1].boxplot(Stat_Ju["duration"].astype(float))
 
-    result_August = ax[1][2].boxplot(Stat_Au["duration"].astype(float), whis=2)
-    result_September = ax[1][3].boxplot(Stat_Se["duration"].astype(float), whis=2)
+    result_August = ax[1][2].boxplot(Stat_Au["duration"].astype(float))
+    result_September = ax[1][3].boxplot(Stat_Se["duration"].astype(float))
 
-    result_October = ax[2][0].boxplot(Stat_Oc["duration"].astype(float), whis=2)
-    result_November = ax[2][1].boxplot(Stat_No["duration"].astype(float), whis=2)
-    result_December = ax[2][2].boxplot(Stat_De["duration"].astype(float), whis=2)
+    result_October = ax[2][0].boxplot(Stat_Oc["duration"].astype(float))
+    result_November = ax[2][1].boxplot(Stat_No["duration"].astype(float))
+    result_December = ax[2][2].boxplot(Stat_De["duration"].astype(float))
+
+    #plt.savefig("data/boxplot-with-outlier.pdf")
 
     no_outliner_Ja = Stat_Ja[Stat_Ja["duration"].astype(float) <= result_Januar["whiskers"][1].get_ydata()[1]]
     no_outliner_Fe = Stat_Fe[Stat_Fe["duration"].astype(float) <= result_Februar["whiskers"][1].get_ydata()[1]]
