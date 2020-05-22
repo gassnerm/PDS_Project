@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime as dt
 
-df = pd.read_csv(r"C:\Users\manue\git\PDS\Project\PDS_Project\output_data\transform_DF", index_col=0)
+df = pd.read_csv(r"/output_data/transform_DF", index_col=0)
 
 df_mapping = pd.Series({0: "Monday",
                         1: "Tuesday",

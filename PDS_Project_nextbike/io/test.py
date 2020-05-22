@@ -3,7 +3,7 @@ import os
 from .input import read_file
 import folium
 from .createStatisics import create_statistics
-from .utils import drop_short_trips, cleaning_new_df, create_zip_code_data, drop_outlier
+from .utils import cleaning_new_df, create_zip_code_data, drop_outlier
 
 
 def testing_code(df):
