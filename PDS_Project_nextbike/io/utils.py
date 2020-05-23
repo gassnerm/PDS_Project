@@ -29,8 +29,8 @@ def drop_short_long_trips(df):
     df = pd.DataFrame(df)
 
     # search for trips where the duration is under or equal 3 minutes and the position doesnt changed
-    short_trip = df[(df["duration"] <= float(3)) & (df["End_position_UID"] == df["Start_position_UID"])]
-    long_trips = df[(df["duration"] > float(120))]
+    short_trip = df[(df["Duration"] <= float(3)) & (df["End_position_UID"] == df["Start_position_UID"])]
+    long_trips = df[(df["Duration"] > float(120))]
 
     # drop short values from data frame
     df.drop(short_trip.index, inplace=True)
@@ -88,11 +88,11 @@ def create_zip_code_data(df, geo_data):
     df_new = df_new.join(zip_code, on=["Coordinates"], lsuffix="_s", )
 
     # drop trips with wrong coordinates
-    wrong_coordinates = df_new[df_new["zipcodes"].astype(str).str.contains("^(?![0-9]{5})")].index
+    wrong_coordinates = df_new[df_new["Zip_codes"].astype(str).str.contains("^(?![0-9]{5})")].index
     df_new = df_new.drop(wrong_coordinates)
 
     # drop bookings they are not in frankfurt
-    not_in_frankfurt = df_new[(df_new["zipcodes"].astype(int) > 65936) | (df_new["zipcodes"].astype(int) < 60306)].index
+    not_in_frankfurt = df_new[(df_new["Zip_codes"].astype(int) > 65936) | (df_new["Zip_codes"].astype(int) < 60306)].index
     df_new = df_new.drop(not_in_frankfurt)
 
     return df_new
