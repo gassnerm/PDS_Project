@@ -92,9 +92,25 @@ def create_zip_code_data(df, geo_data):
     df_new = df_new.drop(wrong_coordinates)
 
     # drop bookings they are not in frankfurt
-    not_in_frankfurt = df_new[(df_new["Zip_codes"].astype(int) > 65936) | (df_new["Zip_codes"].astype(int) < 60306)].index
-    df_new = df_new.drop(not_in_frankfurt)
+    not_in_frankfurt = pd.DataFrame(columns=["Zipcode"])
+    for i in df_new.index:
 
+        # zip_codes of frankfurt
+        if (int(df_new.loc[i]["Zip_codes"]) in [60306, 60308, 60311, 60313, 60314, 60316, 60318,
+                                            60320, 60322, 60323, 60325, 60326, 60327, 60329,
+                                            60385, 60386, 60388, 60389, 60431, 60433, 60435,
+                                            60437, 60438, 60439, 60486, 60487, 60488, 60489,
+                                            60528, 60529, 60547, 60549, 60594, 60596, 60598,
+                                            60599, 61352, 63067, 65929, 65931, 65933, 65934, 65936]):
+            continue
+        else:
+            not_in_frankfurt.loc[i, "Zipcode"] = df_new.loc[i]["Zip_codes"]
+            print("not okay", i)  # Standard scale
+
+    not_in_frankfurt
+
+    #not_in_frankfurt = df_new[(df_new["Zip_codes"].astype(int) > 65931) | (df_new["Zip_codes"].astype(int) < 60306)].index
+    df_new = df_new.drop(not_in_frankfurt.index)
     return df_new
 
 
