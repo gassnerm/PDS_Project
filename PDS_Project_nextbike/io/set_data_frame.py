@@ -94,6 +94,7 @@ def create_df(base):
     # create the zip code column for trips
     trip_wduration = create_zip_code_data(trip_wduration, geo_data)
     print("Zip_codes ", trip_wduration["Duration"].count())
+
     # drop columns used to join the geo_data
     trip_wduration.drop(labels="Coordinates", axis=1, inplace=True)
 
