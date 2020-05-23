@@ -107,7 +107,7 @@ def create_df(base):
 
     # Set schedule for columns
     cols = trip_wduration.columns.tolist()
-    cols = cols[1:2] + cols[0:1] + cols[3:4] + cols[5:6] + cols[4:5] + cols[7:8] + cols[9:10] + cols[10:11] + cols[6:7] + \
+    cols = cols[1:2] + cols[0:1] + cols[8:9] + cols[3:4] + cols[5:6] + cols[4:5] + cols[7:8] + cols[9:10] + cols[10:11] + cols[6:7] + \
            cols[-2:-1] + cols[-1:] + cols[2:3]
 
     trip_wduration = trip_wduration[cols]
