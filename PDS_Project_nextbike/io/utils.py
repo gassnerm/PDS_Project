@@ -94,7 +94,7 @@ def create_zip_code_data(df, geo_data):
     # drop bookings they are not in frankfurt
     not_in_frankfurt = df_new[(df_new["Zip_codes"].astype(int) > 65936) | (df_new["Zip_codes"].astype(int) < 60306)].index
     df_new = df_new.drop(not_in_frankfurt)
-
+    65428
     return df_new
 
 

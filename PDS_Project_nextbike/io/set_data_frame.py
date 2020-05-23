@@ -86,14 +86,14 @@ def create_df(base):
 
     # Drop negative coordinates
     trip_wduration = cleaning_new_df(trip_wduration)
-    print("Drop negative coorindinates ", trip_wduration)
+    print("Drop negative coorindinates ", trip_wduration["Duration"].count())
 
     # read geo data
     geo_data = read_file("data/backup_zipcodes.csv")
 
     # create the zip code column for trips
     trip_wduration = create_zip_code_data(trip_wduration, geo_data)
-
+    print("Zip_codes ", trip_wduration["Duration"].count())
     # drop columns used to join the geo_data
     trip_wduration.drop(labels="Coordinates", axis=1, inplace=True)
 
@@ -101,13 +101,13 @@ def create_df(base):
     # trip_wduration = drop_outlier(trip_wduration)
 
     # drop not needed columns
-    trip_wduration.drop(["trip", "p_place_type", "b_bike_type", "Bikes_on_position", "Start_position_UID", "Station_position",
+    trip_wduration.drop(["trip", "p_place_type", "b_bike_type", "Start_position_UID", "Station_position",
                          "Start_Place", "Bike_position", "End_position_UID", "End_Station_position"], axis=1, inplace=True)
 
     # Set schedule for columns
     cols = trip_wduration.columns.tolist()
-    cols = cols[1:2] + cols[0:1] + cols[2:3] + cols[4:5] + cols[7:8] + cols[8:9] + cols[9:10] + cols[5:6] + cols[6:7] + \
-           cols[3:4] + cols[-2:-1] + cols[-1:]
+    cols = cols[1:2] + cols[0:1] + cols[3:4] + cols[5:6] + cols[4:5] + cols[7:8] + cols[9:10] + cols[10:11] + cols[6:7] + \
+           cols[-2:-1] + cols[-1:] + cols[2:3]
 
     trip_wduration = trip_wduration[cols]
 
