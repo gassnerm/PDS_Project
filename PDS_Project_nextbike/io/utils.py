@@ -30,6 +30,8 @@ def drop_short_long_trips(df):
 
     # search for trips where the duration is under or equal 3 minutes and the position doesnt changed
     short_trip = df[(df["Duration"] <= float(3)) & (df["End_position_UID"] == df["Start_position_UID"])]
+
+    # write DF without reduction
     long_trips = df[(df["Duration"] > float(120))]
 
     # drop short values from data frame
@@ -64,6 +66,7 @@ def cleaning_new_df(df):
     df = pd.DataFrame(df)
 
     # Drop trips with recording in place name
+    print(df.loc[1:2])
     recording_df = pd.DataFrame(df[df["Start_Place"].str.contains("^(recording)")])
     df.drop(recording_df.index, inplace=True)
 
@@ -111,6 +114,7 @@ def create_zip_code_data(df, geo_data):
 
     #not_in_frankfurt = df_new[(df_new["Zip_codes"].astype(int) > 65931) | (df_new["Zip_codes"].astype(int) < 60306)].index
     df_new = df_new.drop(not_in_frankfurt.index)
+
     return df_new
 
 

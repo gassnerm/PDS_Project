@@ -14,7 +14,7 @@ def main(train, transform, csv_file, predict, testing_code):
     if train:
         model.train()
     else:
-        print("You don't do anything.")
+        print("no_training")
 
     if transform:
         # read file return data frame object
