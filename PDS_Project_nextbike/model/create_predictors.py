@@ -155,3 +155,6 @@ plt.show()
 df["holiday"]
 df_holiday
 
+
+
+def create_predictors_classifiaction()
