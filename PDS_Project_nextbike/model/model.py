@@ -1,4 +1,3 @@
-from tensorflow_core.python.keras.wrappers.scikit_learn import KerasRegressor
 
 from .. import io
 from ..io import read_file
