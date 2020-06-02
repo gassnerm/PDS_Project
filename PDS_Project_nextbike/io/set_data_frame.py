@@ -76,7 +76,7 @@ def create_df(base):
     print("Drop negative coorindinates ", trip_wduration["Duration"].count())
 
     # read geo data
-    geo_data = read_file("data/backup_zipcodes.csv")
+    geo_data = read_file("geo_Data/backup_zipcodes.csv")
 
     # create the zip code column for trips
     trip_wduration = create_zip_code_data(trip_wduration, geo_data)
