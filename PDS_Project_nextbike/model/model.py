@@ -1,4 +1,4 @@
-from tensorflow_core.python.keras.wrappers.scikit_learn import KerasClassifier
+from tensorflow_core.python.keras.wrappers.scikit_learn import KerasRegressor
 
 from .. import io
 from ..io import read_file
@@ -60,7 +60,7 @@ def train_nn_classification_task(df_file):
     scaler = RobustScaler()
 
     # create nn object with parameters
-    nn = KerasClassifier(NNClassifier(x_train), epochs=epochs, batch_size=batch_size, validation_split=0.2)
+    nn = KerasRegressor(NNClassifier(x_train), epochs=epochs, batch_size=batch_size, validation_split=0.2)
 
     # use polynomial features
     poly = PolynomialFeatures
