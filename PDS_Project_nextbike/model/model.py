@@ -1,4 +1,3 @@
-from tensorflow_core.python.keras.wrappers.scikit_learn import KerasRegressor
 
 from .. import io
 from ..io import read_file
@@ -92,7 +91,7 @@ def train_nn_classification_task(df_file):
     from matplotlib.colors import LogNorm
 
     fig, ax = plt.subplots(1,1, figsize=(3, 3), dpi=100)
-    sns.heatmap(grid_df.pivot(columns="nn__dropout_rate", values="loss", index="poly__degree"), cmap=coolwarm, ax=ax)
+    sns.heatmap(grid_df.pivot(columns="nn__dropout_rate", values="loss", index="poly__degree"), cmap="cool_warms", ax=ax)
     ax.set_title("Grid Search Hyperparameter")
 
 
