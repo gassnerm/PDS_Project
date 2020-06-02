@@ -15,7 +15,9 @@ dependencies:
   - setuptools=46.1.1
   - shapely=1.6.4
   - tensorflow=2.0.0
-  - geopy=1.22.0
+  - keras=2.0.0
+  - tensorflow_core=2.2.0
   - pip:
     - folium==0.10.1
     - vincenty==0.1.4
+    - geopy=1.22.0
