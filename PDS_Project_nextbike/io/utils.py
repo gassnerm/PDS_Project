@@ -17,8 +17,6 @@ def get_data_path():
 # Cast the duration from timedelta to number of minutes
 def cast_timedelta_to_number(series_timedelta):
 
-    print(series_timedelta.keys())
-    print(series_timedelta)
     # return a series with duration in minutes for each trip
     return pd.Series(data=list(map(lambda x: pd.to_timedelta(series_timedelta[x]).total_seconds()/60, series_timedelta.index)))
 
@@ -66,7 +64,6 @@ def cleaning_new_df(df):
     df = pd.DataFrame(df)
 
     # Drop trips with recording in place name
-    print(df.loc[1:2])
     recording_df = pd.DataFrame(df[df["Start_Place"].str.contains("^(recording)")])
     df.drop(recording_df.index, inplace=True)
 
@@ -108,72 +105,51 @@ def create_zip_code_data(df, geo_data):
             continue
         else:
             not_in_frankfurt.loc[i, "Zipcode"] = df_new.loc[i]["Zip_codes"]
-            print("not okay", i)  # Standard scale
+
 
     not_in_frankfurt
 
-    #not_in_frankfurt = df_new[(df_new["Zip_codes"].astype(int) > 65931) | (df_new["Zip_codes"].astype(int) < 60306)].index
     df_new = df_new.drop(not_in_frankfurt.index)
 
     return df_new
 
 
-def drop_outlier(df):
-    print(df)
+# method to delete batch bookings
+def drop_reallocation_trips(df):
+    # get trips start times
+    time_frames = pd.DataFrame(df["Start_Time"].value_counts())
 
-    # extract the month out of date
-    df["month"] = df["Starttime"].astype(str).str.extract(pat="(-[0-9]{2}-)")
-    df["month"] = df["month"].str.replace("-*-", "")
+    # get start times occur more then 4 times number of bikes that can be lent in parall
+    time_frames = time_frames[time_frames["Start_Time"] > 4]
 
-    # Separate the df by month
-    Stat_Ja = df[df["month"] == "01"]
-    Stat_Fe = df[df["month"] == "02"]
-    Stat_Ma = df[df["month"] == "03"]
-    Stat_Ap = df[df["month"] == "04"]
-    Stat_May = df[df["month"] == "05"]
-    Stat_Ju = df[df["month"] == "06"]
-    Stat_Jul = df[df["month"] == "07"]
-    Stat_Au = df[df["month"] == "08"]
-    Stat_Se = df[df["month"] == "09"]
-    Stat_Oc = df[df["month"] == "10"]
-    Stat_No = df[df["month"] == "11"]
-    Stat_De = df[df["month"] == "12"]
+    # get bookings in df
+    wrong = df[df["Start_Time"].isin(time_frames.index)].sort_values("Start_Time")
 
-    fig, ax = plt.subplots(nrows=3, ncols=4, figsize=(20, 5))
+    # find bookings that has also same end
+    time_frames_end = pd.DataFrame(df["End_time"].value_counts())
 
-    result_Januar = ax[0][0].boxplot(Stat_Ja["duration"].astype(float))
-    result_Februar = ax[0][1].boxplot(Stat_Fe["duration"].astype(float))
-    result_March = ax[0][2].boxplot(Stat_Ma["duration"].astype(float))
+    # occur more then 4 times with same end
+    time_frames_end = time_frames_end[time_frames_end["End_time"] > 4]
 
-    result_April = ax[0][3].boxplot(Stat_Ap["duration"].astype(float))
-    result_May = ax[1][0].boxplot(Stat_May["duration"].astype(float))
-    result_June = ax[1][1].boxplot(Stat_Ju["duration"].astype(float))
+    # get the wrong trips with the same ends and starts with more then 4 occur
+    wrong_eND = wrong[wrong["End_time"].isin(time_frames_end.index)]
 
-    result_August = ax[1][2].boxplot(Stat_Au["duration"].astype(float))
-    result_September = ax[1][3].boxplot(Stat_Se["duration"].astype(float))
+    # get statistics of bookings
+    wrong_eND.groupby("Start_Time")["Duration"].mean()
+    wrong_eND.groupby("Start_Time")["Duration"].count()
+    wrong_eND.groupby("Start_Time")["Duration"].min()
 
-    result_October = ax[2][0].boxplot(Stat_Oc["duration"].astype(float))
-    result_November = ax[2][1].boxplot(Stat_No["duration"].astype(float))
-    result_December = ax[2][2].boxplot(Stat_De["duration"].astype(float))
+    # orchestrate statistics to data frame
+    wrong_data = pd.DataFrame(columns=["Mean", "Count", "min"], index=wrong_eND["Start_Time"],
+                              data={"Mean": wrong_eND.groupby("Start_Time")["Duration"].mean(),
+                                    "min": wrong_eND.groupby("Start_Time")["Duration"].min(),
+                                    "Count": wrong_eND.groupby("Start_Time")["Duration"].count()})
 
-    #plt.savefig("data/boxplot-with-outlier.pdf")
+    # get dates that has to be dropped
+    true = wrong_data.groupby("Start_Time").max().sort_values("min")["Count"] > 4
 
-    no_outliner_Ja = Stat_Ja[Stat_Ja["duration"].astype(float) <= result_Januar["whiskers"][1].get_ydata()[1]]
-    no_outliner_Fe = Stat_Fe[Stat_Fe["duration"].astype(float) <= result_Februar["whiskers"][1].get_ydata()[1]]
-    no_outliner_Ma = Stat_Ma[Stat_Ma["duration"].astype(float) <= result_March["whiskers"][1].get_ydata()[1]]
-    no_outliner_Ap = Stat_Ap[Stat_Ap["duration"].astype(float) <= result_April["whiskers"][1].get_ydata()[1]]
-    no_outliner_May = Stat_May[Stat_May["duration"].astype(float) <= result_May["whiskers"][1].get_ydata()[1]]
-    no_outliner_Ju = Stat_Ju[Stat_Ju["duration"].astype(float) <= result_June["whiskers"][1].get_ydata()[1]]
-    no_outliner_Au = Stat_Au[Stat_Au["duration"].astype(float) <= result_August["whiskers"][1].get_ydata()[1]]
-    no_outliner_Se = Stat_Se[Stat_Se["duration"].astype(float) <= result_September["whiskers"][1].get_ydata()[1]]
-    no_outliner_Oc = Stat_Oc[Stat_Oc["duration"].astype(float) <= result_October["whiskers"][1].get_ydata()[1]]
-    no_outliner_No = Stat_No[Stat_No["duration"].astype(float) <= result_November["whiskers"][1].get_ydata()[1]]
-    no_outliner_De = Stat_De[Stat_De["duration"].astype(float) <= result_December["whiskers"][1].get_ydata()[1]]
+    start_time = true.index.astype(str)
 
-    # create the df without outlier
-    df_new = no_outliner_Ja.append(no_outliner_Fe).append(no_outliner_Ma).append(
-        no_outliner_Ap).append(no_outliner_May).append(no_outliner_Ju).append(no_outliner_Au).append(
-        no_outliner_Se).append(no_outliner_Oc).append(no_outliner_No).append(no_outliner_De)
-
-    df_new.drop(columns="month", inplace=True)
-    return df_new
+    # drop trip from data frame
+    df.drop(df[df["Start_Time"].isin(start_time)].index, inplace=True)
+    return df
