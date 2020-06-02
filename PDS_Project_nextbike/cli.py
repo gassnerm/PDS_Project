@@ -1,20 +1,18 @@
 import click
 from . import model
+from .model import create_predictors
 from .io import input, set_data_frame, output, test
 from datetime import datetime
+from .model import train_nn_classification_task
 
 
 @click.command()
 @click.option('--train/--no-train', default=False, help="Train the model.")
 @click.option('--predict/--no-prediction', default=False, help="do something!")
 @click.option('--transform/--no-prediction', default=False, help="do something!")
-@click.argument('csv_file', type=click.File("rb"))
+@click.argument('csv_file', type=click.File("rb"), default=False)
 @click.option('--testing_code/--no_testing', default=False, help="Can be used for prototyping")
 def main(train, transform, csv_file, predict, testing_code):
-    if train:
-        model.train()
-    else:
-        print("no_training")
 
     if transform:
         # read file return data frame object
@@ -29,11 +27,9 @@ def main(train, transform, csv_file, predict, testing_code):
     if predict:
         print("Hallo")
 
-    if testing_code:
-        df = input.read_file(csv_file)
-        print("Testing class used")
-        test.testing_code(df)
+    if train:
+        train_nn_classification_task(csv_file)
+
 
 if __name__ == '__main__':
     main()
-
