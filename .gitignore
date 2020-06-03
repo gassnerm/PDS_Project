@@ -9,7 +9,9 @@ __pycache__/
 # Distribution / packaging
 .Python
 output_data/transform_DF
-data
+data/frankfurt.csv
+data/transform_DF_RAW
+data/pre_transform_DF
 build/
 develop-eggs/
 dist/
