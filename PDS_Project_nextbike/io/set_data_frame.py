@@ -69,7 +69,7 @@ def create_df(base):
     trip_wduration["End_Bikes"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_bikes"].values)
 
     # drop trips that are shorter or 2 minutes long and did n change location or are longe then 2hours
-    trip_wduration = drop_short_long_trips(trip_wduration)
+    #trip_wduration = drop_short_long_trips(trip_wduration)
 
     # Drop negative coordinates
     trip_wduration = cleaning_new_df(trip_wduration)
@@ -98,7 +98,7 @@ def create_df(base):
 
     print("Vor allocation", trip_wduration)
 
-    trip_wduration = drop_reallocation_trips(trip_wduration)
+    #trip_wduration = drop_reallocation_trips(trip_wduration)
 
 
     print("Finish", trip_wduration)

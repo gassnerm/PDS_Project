@@ -13,51 +13,158 @@ from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
 from geopy import distance as geo
 
 
-def create_prediction_Duration():
-    df = pd.read_csv(r"/output_data/transform_DF", index_col=0)
+def create_prediction_Duration(file):
 
-    df_mapping = pd.Series({0: "Monday",
-                        1: "Tuesday",
-                        2: "Wednesday",
-                        3: "Thurday",
-                        4: "Friday",
-                        5: "Saturday",
-                        6: "Sunday"})
+    parse_dates = lambda x: dt.datetime.strftime(x, "%Y%M%D%H")
 
+    # import the df, zipcode and the weather data
+    df = read_file(file)
+    weather = pd.read_csv(r"C:\Users\manue\git\PDS\Project\PDS_Project\data\frankfurt_weather_data2019.csv", sep=",",
+                          index_col=0)
+    zc = pd.read_csv(r"C:\Users\manue\git\PDS\Project\PDS_Project\geo_Data\backup_zipcodes.csv", index_col=0)
 
-    holiday_winter = dt.datetime(2019, 1, 12)
-    holiday_spring = dt.datetime(2019, 4, 27)
-    holiday_sommer = dt.datetime(2019, 8, 9)
-    holiday_fall = dt.datetime(2019, 10, 12)
-    holiday_crism = dt.datetime(2019, 12, 31)
+    # Take the basic df
+    X_predictors = df
 
+    # Create the predictor matrix columns that are not needed
+    X_predictors = X_predictors.drop(columns=["Start_Latitude"
+        , "Bike_number"
+        , "Start_Longitude"
+        , "End_Station_number"
+        , "End_time"
+        , "End_Latitude"
+        , "End_Longitude"
+        , "Bikes_on_position"
+        , "End_Bikes", "Start_Station"])
 
-    date_list = pd.Series([str(holiday_winter - dt.timedelta(days=x)) for x in range(0,12)], dtype=str)
-    date_list2 = pd.Series([str(holiday_spring - dt.timedelta(days=x)) for x in range(0,12)], dtype=str)
-    date_list3 = pd.Series([str(holiday_sommer - dt.timedelta(days=x)) for x in range(0,40)], dtype=str)
-    date_list4 = pd.Series([str(holiday_fall - dt.timedelta(days=x)) for x in range(0,13)], dtype=str)
-    date_list5 = pd.Series([str(holiday_crism - dt.timedelta(days=x)) for x in range(0,9)], dtype=str)
+    # Format date to other format "2019-20-01 00:00:00 to 2019200100"
+    X_predictors["date"] = X_predictors["Start_Time"].astype(str).str.replace("-", "")
+    X_predictors["date"] = X_predictors["date"].str.replace(":*:.*", "")
+    X_predictors["date"] = X_predictors["date"].str.replace("\s", "")
 
-    date_list = date_list.append(date_list2, ignore_index=False).reset_index(drop = True)
-    date_list = date_list.append(date_list3, ignore_index=False).reset_index(drop = True)
-    date_list = date_list.append(date_list4, ignore_index=False).reset_index(drop = True)
-    date_list = date_list.append(date_list5, ignore_index=False).reset_index(drop = True)
+    # Create intervalls for hours
+    X_predictors["hour"] = X_predictors["date"].astype(str).str.extract("([0-9]{2}$)")
+    X_predictors["month"] = X_predictors["date"].str.replace("([0-9]{4}$)", "")
 
+    # create month feature
+    X_predictors["month"] = X_predictors["month"].astype(str).str.extract("([0-9]{2}$)")
 
-    df_holiday = pd.Series({0: "2019-05-01",
-                            1: "2019-05-30",
-                            2: "2019-06-10",
-                            3: "2019-06-20"})
+    X_predictors["EVENING"] = ((X_predictors["hour"] > "18") | (X_predictors["hour"] == "00"))
+    X_predictors["MIDDAY"] = ((X_predictors["hour"] > "12") & (X_predictors["hour"] <= "18"))
+    X_predictors["MORNING"] = ((X_predictors["hour"] > "06") & (X_predictors["hour"] <= "12"))
+    X_predictors["NIGHT"] = ((X_predictors["hour"] > "00") & (X_predictors["hour"] < "07"))
 
-    df_holiday = df_holiday.append(date_list.astype(str)).reset_index(drop=True)
-    df_holiday = pd.Series(index=df_holiday.index, data=list(map(lambda x: str(x[0:10]), df_holiday.values)))
+    X_predictors["EVENING"] = pd.to_numeric(X_predictors["EVENING"]).astype(int)
+    X_predictors["MIDDAY"] = pd.to_numeric(X_predictors["MIDDAY"]).astype(int)
+    X_predictors["MORNING"] = pd.to_numeric(X_predictors["MORNING"]).astype(int)
+    X_predictors["NIGHT"] = pd.to_numeric(X_predictors["NIGHT"]).astype(int)
 
+    location_Downtown = pd.DataFrame(data=[["point A", 8.683490753173828, 50.112817899138285]],
+                                     columns=["Describtion", "long", "latitude"])
 
-    df["day"] = pd.Series(index=df.index,data=list(map(lambda x: df_mapping[int(pd.to_datetime(str(x)).weekday())], df["Starttime"])))
+    # calculate durantion between center point of downtown and
+    X_predictors["distan_Downtown"] = pd.Series(index=df.index, data=list(map(
+        lambda x: geo.distance(tuple(location_Downtown.loc[0]["long":"latitude"]),
+                               tuple((df.loc[x]["Start_Longitude"], df.loc[x]["Start_Latitude"]))).km, df.index)))
 
-    df["hour"] = pd.Series(index=df.index, data=list(map(lambda x: str(df.loc[x]["Starttime"])[11:13], df.index)))
+    # set temp to datetype string
+    weather.index = weather.index.astype(str)
 
-    df["holiday"] = pd.Series(index=df.index, data=list(map(lambda x: df.loc[x]["Starttime"][0:10] in df_holiday.values, df.index)))
+    # Join weather dates to predictor matrix
+    X_predictors = X_predictors.join(weather, on="date", how="inner")
+
+    # Set weekday from boolean to int
+    X_predictors["Weekday"] = X_predictors["Weekday"].astype(int)
+
+    # drop not needed weather data
+    X_predictors.drop(columns=["relative humidity", "Rainfall", "SD_SO", "V_VV"], inplace=True)
+
+    # get month as parameter
+    month = pd.get_dummies(X_predictors["month"], drop_first=True)
+    month.columns = ["FE", "MA", "AP", "MA", "JU", "AU", "SE", "OC", "NO", "DE"]
+    X_predictors = X_predictors.join(month)
+
+    # create dates
+    start = dt.datetime(2019, 1, 20)
+    dates = pd.date_range(start=start, end=dt.datetime(2019, 6, 30), periods=162)
+    start = dt.datetime(2019, 8, 1)
+    dates2 = pd.date_range(start=start, end=dt.datetime(2019, 12, 31), periods=153)
+    dates = dates.append(dates2)
+    dates
+
+    median = pd.Series(index=dates, data=0)
+    mean = pd.Series(index=dates, data=0)
+    std = pd.Series(index=dates, data=0)
+
+    count = 0
+    for i in range(0, 315):
+        start = dates[count]
+
+        if i == 314:
+            # median.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= dates[314])]["Duration"].describe()[4]
+            mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= dates[314])]["Duration"].describe()[1]
+            # std[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= dates[314])]["Duration"].describe()[2]
+
+            break;
+
+        end = dates[count + 1]
+        # median.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= start) & (pd.to_datetime(df["Start_Time"]) < end)]["Duration"].describe()[4]
+        mean.loc[dates[count]] = \
+        df[(pd.to_datetime(df["Start_Time"]) >= start) & (pd.to_datetime(df["Start_Time"]) < end)][
+            "Duration"].describe()[1]
+        # std[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= start) & (pd.to_datetime(df["Start_Time"]) < end)]["Duration"].describe()[2]
+        count += 1
+
+    # format date for hour
+    X_predictors["Start_Time_tem"] = pd.to_datetime(X_predictors["date"], format=("%Y%m%d%H"))
+    hours = X_predictors.groupby("Start_Time_tem")["Duration"].mean()
+    hours = pd.DataFrame(hours)
+    count = 0
+
+    # create the last hourly average
+    for i in X_predictors.index:
+        print(count)
+        try:
+            count += 1
+            X_predictors.loc[i, "H1"] = hours.loc[X_predictors.loc[i, "Start_Time_tem"] - dt.timedelta(hours=1)][
+                "Duration"]
+            print(hours.loc[X_predictors.loc[i, "Start_Time_tem"] - dt.timedelta(hours=1)]["Duration"])
+            X_predictors.loc[i, "H2"] = hours.loc[X_predictors.loc[i, "Start_Time_tem"] - dt.timedelta(hours=2)][
+                "Duration"]
+            X_predictors.loc[i, "H3"] = hours.loc[X_predictors.loc[i, "Start_Time_tem"] - dt.timedelta(hours=3)][
+                "Duration"]
+            X_predictors.loc[i, "H4"] = hours.loc[X_predictors.loc[i, "Start_Time_tem"] - dt.timedelta(hours=4)][
+                "Duration"]
+        except KeyError:
+            print("null")
+
+    # set the daily average of the last 2 days
+    X_predictors["L1"] = pd.Series(index=df.index, data=list(
+        map(lambda x: mean.shift(1)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))],
+            df.index)))
+    X_predictors["L2"] = pd.Series(index=df.index, data=list(
+        map(lambda x: mean.shift(2)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))],
+            df.index)))
+
+    #
+    X_predictors["L1"].fillna(value=0, inplace=True)
+    X_predictors["L2"].fillna(value=0, inplace=True)
+    X_predictors["H1"].fillna(value=0, inplace=True)
+    X_predictors["H2"].fillna(value=0, inplace=True)
+    X_predictors["H3"].fillna(value=0, inplace=True)
+    X_predictors["H4"].fillna(value=0, inplace=True)
+
+    # Set target to Y (durations)
+    Y = pd.DataFrame(columns=["Duration"], data=X_predictors["Duration"])
+
+    # Drop duration from predictor
+    X_predictors.drop(
+        columns=["month", "Start_Time", "Duration", "hour", "date", "Zip_codes", "Start_Time_tem", "Duration_log"],
+        inplace=True)
+
+    X_predictors
+
+    return X_predictors, Y
 
 
 def create_predictors_classification(file):

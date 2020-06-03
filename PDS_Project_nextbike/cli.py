@@ -3,7 +3,7 @@ from . import model
 from .model import create_predictors
 from .io import input, set_data_frame, output, test
 from datetime import datetime
-from .model import train_nn_classification_task
+from .model import train_nn_classification_task, create_prediction_Duration
 
 
 @click.command()
@@ -29,7 +29,7 @@ def main(train, transform, csv_file, predict, testing_code):
 
     if train:
         train_nn_classification_task(csv_file)
-
+        create_prediction_Duration(csv_file)
 
 if __name__ == '__main__':
     main()
