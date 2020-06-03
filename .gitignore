@@ -8,8 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-!output_data/.gitkeep
-output_data/*
+output_data/transform_DF
 data
 build/
 develop-eggs/
