@@ -69,14 +69,14 @@ def create_df(base):
     trip_wduration["End_Bikes"] = pd.Series(index=trip_wduration.index, data=end_rows_new["p_bikes"].values)
 
     # drop trips that are shorter or 2 minutes long and did n change location or are longe then 2hours
-    #trip_wduration = drop_short_long_trips(trip_wduration)
+    trip_wduration = drop_short_long_trips(trip_wduration)
 
     # Drop negative coordinates
     trip_wduration = cleaning_new_df(trip_wduration)
     print("Drop negative coorindinates ", trip_wduration["Duration"].count())
 
     # read geo data
-    geo_data = read_file("geo_Data/backup_zipcodes.csv")
+    geo_data = read_file("../geo_Data/backup_zipcodes.csv")
 
     # create the zip code column for trips
     trip_wduration = create_zip_code_data(trip_wduration, geo_data)
@@ -98,7 +98,7 @@ def create_df(base):
 
     print("Vor allocation", trip_wduration)
 
-    #trip_wduration = drop_reallocation_trips(trip_wduration)
+    trip_wduration = drop_reallocation_trips(trip_wduration)
 
 
     print("Finish", trip_wduration)

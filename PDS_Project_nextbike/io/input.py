@@ -1,3 +1,5 @@
+from io import BufferedReader
+
 from .utils import get_data_path
 import pandas as pd
 import os
@@ -6,18 +8,29 @@ import pickle
 
 def read_file(filename):
     try:
+        # read file
+        path = os.path.join(get_data_path(), filename)
 
-        df = pd.read_csv(filename, dtype=str, index_col=0)
+        # read file create df out of it
+        df = pd.read_csv(path, dtype=str, index_col=0)
 
         return df
 
     except FileNotFoundError:
 
+        # file not found catch
         print("Data file not found. Path was " + filename)
 
 
-def read_model():
-    path = os.path.join(get_data_path(), "output/model.pkl")
-    with open(path, "rb") as f:
-        model = pickle.load(f)
+# read model for prediction
+def read_model(classif):
+
+    if classif:
+        # read model from storage
+        path = os.path.join(os.getcwd() + r"\output_data\classif_model.h5")
+    else:
+        # if regression model required
+        path = os.path.join(os.getcwd() + r"\output_data\regression_model.pkl")
+
+    model = pickle.load(open(path, 'rb'))
     return model

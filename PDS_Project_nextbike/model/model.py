@@ -1,114 +1,80 @@
-
-from .. import io
-from ..io import read_file
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.preprocessing import StandardScaler, PolynomialFeatures, RobustScaler
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.linear_model import Ridge, Lasso
-from sklearn.pipeline import Pipeline
-from sklearn import metrics
-#Import for project
-from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
-#Import for project
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
-import tensorflow as tf
+from sklearn.model_selection import train_test_split
 from tensorflow import keras
 from tensorflow.keras import layers
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import RobustScaler
-from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
-from geopy import distance as geo
-from .create_predictors import create_predictors_classification, create_prediction_Duration
+from sklearn.preprocessing import RobustScaler, PolynomialFeatures
+from sklearn.preprocessing import StandardScaler
+from ..io import save_model
+import pandas as pd
 
 
+from sklearn.decomposition import PCA
+
+# trains the regression algorithm
+def train_prediction_duration(X_duration, Y_duration, d):
+
+    X_duration = X_duration.to_numpy()
+    Y_duration = Y_duration.to_numpy()
+
+    # set test, train set split apply log tarnsformation
+    X_train, X_test, y_train, y_test = train_test_split(X_duration, np.log(Y_duration), test_size=0.3)
+
+    # use log transformation
+    Y_duration = np.log(Y_duration)
+
+    # determine the degree of the regression
+    poly_reg = PolynomialFeatures(degree=d)
+
+    # Create polynomial features for the 15 predictors fit transform no scaler needed
+    x_poly_matrix = poly_reg.fit_transform(X_duration.reshape(-1, 23))
+
+    # Fitting linear regression to polynomial features that are created
+    lin_reg_Poly = LinearRegression()
+    lin_reg_Poly.fit(x_poly_matrix, Y_duration)
+
+    # save the model to data folder
+    save_model(lin_reg_Poly, False)
 
 
-def train():
-
-
-    lin = LinearRegression()
-    print("Linear model created")
-    print("Training...")
-
-    io.save_model(lin)
-
-
-def train_nn_classification_task(df_file):
-    # get predictor and target
-    x, y = create_predictors_classification(df_file)
-    print("split data set in test and train set")
+def train_nn_classification_task(x, y):
+    # set to array
+    x = x.to_numpy()
+    y = y.to_numpy()
     # splitting predictor and target
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
-    # stand. the training set
     st_scaler = StandardScaler()
     st_scaler.fit(x_train)
-
-    # set parameter for nn epochs and batch size
-    epochs = 50
-    batch_size = 500
-
-    # outliner haneling use Robust scaler
-    scaler = RobustScaler()
-
-    # create nn object with parameters
-    nn = KerasRegressor(NNClassifier(x_train), epochs=epochs, batch_size=batch_size, validation_split=0.2)
-
-    # use polynomial features
-    poly = PolynomialFeatures
-
-    # creating pipeline with scaler, nn and polynomial features
-    pipe = Pipeline([
-        ("poly", poly)
-        ("Robust Scaler", scaler),  # fit -> transform
-        ("Neural Network", nn)  # fit
-    ])
-    param_grid = {
-            # starting pol before scale for ensure of magnitude for pol features and then scale it
-            'poly__degree': [1, 2],
-            'nn__dropout_rate': [0.5]
-        }
-    grid = GridSearchCV(pipe, param_grid, cv=5, verbose=True, n_jobs=4, scoring="neg_root_mean_squared_error")
-
-    # fit training set
-    grid.fit(x_train, y_train)
-
-    # get reports from pipeline
-    grid_df = pd.DataFrame(grid.cv_results_["params"])
-    grid_df["loss"] = -grid.cv_results_["mean_test_score"]
-    grid_df
-
-    # predict the test set
-    y_pred = pipe.predict(x_test)
-
-    from matplotlib.colors import LogNorm
-
-    fig, ax = plt.subplots(1,1, figsize=(3, 3), dpi=100)
-    sns.heatmap(grid_df.pivot(columns="nn__dropout_rate", values="loss", index="poly__degree"), cmap="cool_warms", ax=ax)
-    ax.set_title("Grid Search Hyperparameter")
+    X_train_scaled = st_scaler.transform(x_train)
 
 
-# create classifier for nn
-def NNClassifier(x_train):
     model = keras.Sequential(
-        [layers.Dense(50, activation="sigmoid", input_shape=[x_train.shape[1]]),
-         layers.Dropout(0.2),
-         layers.Dense(50, activation="sigmoid", ),
-         layers.Dropout(0.2),
-         layers.Dense(50, activation="sigmoid"),
-         layers.Dropout(0.2),
-         layers.Dense(1)])
+            [layers.Dense(50, activation="sigmoid", input_shape=[x_train.shape[1]]),
+            layers.Dropout(0.2),
+            layers.Dense(50, activation="sigmoid", ),
+            layers.Dropout(0.2),
+            layers.Dense(50, activation="sigmoid"),
+            layers.Dropout(0.2),
+            layers.Dense(1)])
 
     optimizer = keras.optimizers.Adam()
 
     model.compile(loss='mse',
-                  optimizer=optimizer,
-                  metrics=["mae"])
-    return model
+                optimizer=optimizer,
+                metrics=["mae"])
+
+    # set parameter for nn epochs and batch size
+    epochs = 20
+    batch_size = 5000
+
+
+    # create the model history and fit the model
+    model.fit(X_train_scaled, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.2)
+
+    save_model(model, True)
+
+    # return test set and the history epos
+    return x_test, y_test
+
+
