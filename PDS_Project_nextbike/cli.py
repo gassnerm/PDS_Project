@@ -34,10 +34,10 @@ def main(train, transform, csv_file, predict, testing_code):
         df_tran = set_data_frame.create_df(df)
 
         # create test set predictors for classification
-        #X_clas, Y_clas = create_predictors.create_predictors_classification(df_tran)
+        X_clas, Y_clas = create_predictors.create_predictors_classification(df_tran)
 
         # create prediction for test set for classification
-        #prediction.create_classification_prediction(X_clas, Y_clas)
+        prediction.create_classification_prediction(X_clas, Y_clas)
 
         # create test set predictors duration with degree of 3
         X_dura, Y_dura = create_predictors.create_prediction_Duration(df_tran)
