@@ -192,7 +192,7 @@ def create_predictors_classification(file):
     location_Uni = pd.DataFrame(data=[["point A", 8.692339207868319, 50.130519449999994]],
                                 columns=["Describtion", "long", "latitude"])
 
-    df = df[38000:]
+    #df = df[38000:]
     # calculate durantion between center point of univer. and trip end classifi
     distance_begin = pd.Series(index=df.index, data=list(map(
         lambda x: geo.distance(tuple(location_Uni.loc[0]["long":"latitude"]),
