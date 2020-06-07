@@ -153,3 +153,37 @@ def drop_reallocation_trips(df):
     # drop trip from data frame
     df.drop(df[df["Start_Time"].isin(start_time)].index, inplace=True)
     return df
+
+
+# method to drop every outlier that is as far away from the times 1.5 distanz to the 25 and the 75 quantile
+def drop_outlier(df):
+    for month in ["01", "02", "03", "04", "05", "06", "08", "09", "10", "11", "12"]:
+        print(month)
+
+        for hour in range(0, 24):
+
+            for days in range(0, 8):
+
+                df_temp = df[
+                    (df["month"] == month) & (df["hour"].astype(int) == hour) & (df["day"].astype(int) == days)]
+
+                median = df_temp["Duration"].describe()[5]
+                Q25 = df_temp["Duration"].describe()[4]
+                Q75 = df_temp["Duration"].describe()[6]
+                Q = Q75 - Q25
+                wh_ = Q * 1.5
+                upper = Q75 + wh_
+                lower = Q25 - wh_
+                if lower < 0:
+                    lower = 0
+                # print(upper, lower, wh_, median, Q, Q75,Q25)
+                outlier_Ja_upper = df_temp[(df_temp["Duration"] > upper)]
+                outlier_Ja_lower = df_temp[(df_temp["Duration"] < lower)]
+
+                df_no_out = df_no_out.drop(outlier_Ja_upper.index)
+                df_no_out = df_no_out.drop(outlier_Ja_lower.index)
+
+        print(len(df_no_out))
+        print(len(df))
+
+    return df_no_out

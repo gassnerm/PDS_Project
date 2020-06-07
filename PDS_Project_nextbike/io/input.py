@@ -1,4 +1,3 @@
-from io import BufferedReader
 
 from .utils import get_data_path
 import pandas as pd
@@ -8,6 +7,7 @@ import pickle
 
 def read_file(filename):
     try:
+
         # read file
         path = os.path.join(get_data_path(), filename)
 
@@ -34,3 +34,5 @@ def read_model(classif):
 
     model = pickle.load(open(path, 'rb'))
     return model
+
+

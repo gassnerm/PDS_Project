@@ -1,7 +1,7 @@
 import click
 from .import model
 from .model import create_predictors
-from .io import input, set_data_frame, output, test, save_model, read_file
+from .io import input, set_data_frame, output, save_model, read_file
 from datetime import datetime
 from .model import train_nn_classification_task, create_predictors, prediction
 
@@ -43,7 +43,7 @@ def main(train, transform, csv_file, predict, testing_code):
         X_dura, Y_dura = create_predictors.create_prediction_Duration(df_tran)
 
         # create prediction for test set durations
-        prediction.create_duration_prediction(X_dura, Y_dura, 3)
+        prediction.create_duration_prediction(X_dura, Y_dura)
 
 
     # train the models
@@ -54,17 +54,17 @@ def main(train, transform, csv_file, predict, testing_code):
         # create data frame
         csv_file = set_data_frame.create_df(df)
 
-        # create the predictors for classifcation
-        X_clas, Y_Class = create_predictors.create_predictors_classification(csv_file)
+        # create the predictors for classification
+        #X_clas, Y_Class = create_predictors.create_predictors_classification(csv_file)
 
         # train the model for trip direction and save it
-        x_test, y_test = model.train_nn_classification_task(X_clas, Y_Class)
+        #x_test, y_test = model.train_nn_classification_task(X_clas, Y_Class)
 
         # create predictors for trip duration
         x_duration, y_duration = create_predictors.create_prediction_Duration(csv_file)
 
         # train the model for duration and save it
-        model.train_prediction_duration(x_duration, y_duration, 3)
+        model.train_prediction_duration(x_duration, y_duration)
 
 if __name__ == '__main__':
     main()

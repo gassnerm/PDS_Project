@@ -6,12 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime as dt
 from ..io import read_file, get_data_path
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import RobustScaler
-from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
 from geopy import distance as geo
 
 
@@ -24,7 +18,7 @@ def create_prediction_Duration(file):
     df = read_file(r"..\output_data\transform_DF")
     weather = read_file("frankfurt_weather_data2019.csv")
     zc = read_file(r"..\geo_Data\backup_zipcodes.csv")
-
+    df = df[38000:]
     # make a data frame for weather data
     weather = pd.DataFrame(weather)
 
@@ -51,7 +45,8 @@ def create_prediction_Duration(file):
     X_predictors["date"] = X_predictors["date"].str.replace("\s", "")
 
     # Use zip code for border districts
-    X_predictors["Borderdistrict"] = X_predictors["Zip_codes"].isin([60314, 60598, 60594, 63067, 60316, 60389]).astype(int)
+    X_predictors["Borderdistrict"] = X_predictors["Zip_codes"].isin([65929, 60529, 60549, 65931, 65936, 60528, 60388, 60437, 60438, 60439,
+                                                 60433, 60598, 60599, 63067, 60314, 60386]).astype(int)
 
 
     # Create intervalls for hours
@@ -133,6 +128,8 @@ def create_prediction_Duration(file):
     dates = dates.append(dates2)
     dates
 
+
+
     median = pd.Series(index=dates, data=0)
     mean = pd.Series(index=dates, data=0)
     std = pd.Series(index=dates, data=0)
@@ -147,7 +144,6 @@ def create_prediction_Duration(file):
         if i == 314:
 
             # calculate the mean for day
-
             mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= dates[314])]["Duration"].describe()[1]
             break
         # calculate the mean for days
@@ -176,6 +172,11 @@ def create_prediction_Duration(file):
     X_predictors.drop(
         columns=["month", "Start_Time", "Duration", "hour", "date", "Zip_codes", "Start_Time_tem"],
         inplace=True)
+
+    df = df.round(3)
+    print(df.isnull().any())
+
+    X_predictors.fillna(value=0, inplace=True)
     print(X_predictors)
     return X_predictors, Y
 
@@ -191,7 +192,7 @@ def create_predictors_classification(file):
     location_Uni = pd.DataFrame(data=[["point A", 8.692339207868319, 50.130519449999994]],
                                 columns=["Describtion", "long", "latitude"])
 
-
+    df = df[38000:]
     # calculate durantion between center point of univer. and trip end classifi
     distance_begin = pd.Series(index=df.index, data=list(map(
         lambda x: geo.distance(tuple(location_Uni.loc[0]["long":"latitude"]),
@@ -208,13 +209,13 @@ def create_predictors_classification(file):
     Dist["uni"] = Dist["uni"].astype(int)
     df = Dist.join(df)
 
-
     df["weather"] = 0
 
     # stardistanz, hour, month,
     df["date"] = df["Start_Time"].astype(str).str.replace("-", "")
     df["date"] = df["date"].str.replace(":*:.*", "")
     df["date"] = df["date"].str.replace("\s", "")
+
 
     # set temp to datetype string
     weather.index = weather.index.astype(str)
@@ -237,7 +238,6 @@ def create_predictors_classification(file):
     # create zip code feature for border quarter and student quarters
     df["Borderdistrict"] = df["Zip_codes"].isin([65929, 60529, 60549, 65931, 65936, 60528, 60388, 60437, 60438, 60439,
                                                  60433, 60598, 60599, 63067, 60314, 60386])
-
     df["Student_quarter"] = df["Zip_codes"].isin([60385, 60487, 60385, 60326, 60486, 6028, 60327, 60488, 60487, 65929])
 
     # Set values to int
@@ -245,27 +245,69 @@ def create_predictors_classification(file):
     df["Borderdistrict"] = df["Borderdistrict"].astype(int)
     df["Weekday"] = df["Weekday"].astype(int)
 
-
     # set target values
     target_vector = df["uni"]
-
-    # Drop target from predictor
-    df.drop(columns=["uni"], inplace=True)
-
 
     month = pd.get_dummies(df["month"], drop_first=True)
     month.columns = ["FE", "MA", "AP", "MA", "JU", "AU", "SE", "OC", "NO", "DE"]
 
     # join dummy variables
     df = df.join(month)
+
+    # get all zip codes
+    zipcodes = df["Zip_codes"].value_counts()
+
+    # creat week number
+    df["week"] = pd.to_datetime(df["Start_Time"]).dt.strftime('%W').astype(int)
+
+    # generate feature for zip codes pro.
+    for plz in zipcodes.index:
+        for i in range(0, 52):
+            value = df[(df["uni"] == 1) & (df["Zip_codes"] == plz) & (df["week"] < i)]["uni"].count()
+            value = value / (df[(df["Zip_codes"] == plz) & (df["week"] < i)])["uni"].count()
+            df.loc[df[(df["Zip_codes"] == plz) & (df["week"] == i)].index, "zip_pro"] = value
+    df["zip_pro"].value_counts(bins=20)
+
+
+
+
+
+    # get properbility that station start will go towars univerity based on start informtaion
+    Start_Station = df["Start_Station"].value_counts()
+    for std in Start_Station.index:
+        for w in range(0, 52):
+            value = df[(df["uni"] == 1) & (df["Start_Station"] == std) & (df["week"] < w)]["uni"].count()
+            value = value / (df[(df["Start_Station"] == std) & (df["week"] < w)])["uni"].count()
+            df.loc[df[(df["Start_Station"] == std) & (df["week"] == w)].index, "Start_Station_pro"] = value
+    df["Start_Station_pro"].value_counts(bins=20)
+
+    hour = df["hour"].value_counts()
+
+    for hour in hour.index:
+        for i in range(0, 52):
+            value = df[(df["uni"] == 1) & (df["hour"] == hour) & (df["month"] < i)]["uni"].count()
+            value = (df[(df["hour"] == hour) & (df["month"] < i)])["uni"].count()
+            df.loc[df[(df["hour"] == hour) & (df["month"] == i)].index, "hour_pro"] = value
+
+    df.fillna(value=0, inplace=True)
+
+
+
+    # Drop target from predictor
+    df.drop(columns=["uni"], inplace=True)
+
+
+
+
+
     print(df)
     # drop columns not needed
     df.drop(columns=["hourly temperatur","Zip_codes", "Start_Station", "Start_Time", "Start_Longitude", "Start_Latitude",
                      "end_d", "date", "End_Bikes", "Bike_number", "End_time", "End_Longitude", "End_Latitude",
-                     "End_Station_number", "Duration", "Bikes_on_position", "month", "hour"], inplace=True)
-
-    print(df)
-
+                     "End_Station_number", "Duration", "Bikes_on_position", "month", "hour","week"], inplace=True)
+    df = df.round(3)
+    print(df.isnull().any())
+    df.fillna(value=0, inplace=True)
     # set predictor matrix
     pred_matrix = df
 
