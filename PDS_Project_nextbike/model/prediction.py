@@ -8,7 +8,7 @@ from tensorflow import keras
 import os
 
 
-def create_duration_prediction(X_test, y_test, d):
+def create_duration_prediction(X_test, y_test):
 
     # set to array
     X_test = X_test.to_numpy()
@@ -17,35 +17,26 @@ def create_duration_prediction(X_test, y_test, d):
     # use log transformation
     y_test = np.log(y_test)
 
-    # determine the degree of the regression
-    poly_reg = PolynomialFeatures(degree=d)
-
-    # Create polynomial features for the 15 predictors fit transform no scaler needed
-    x_poly_matrix = poly_reg.fit_transform(X_test.reshape(-1, 23))
-
-    # regression required so false
+    # import the models for regression
     lin = read_model(False)
 
-    # get the coefficients of regression.
-    beta = pd.Series(index=list(poly_reg.get_feature_names()), data=lin.coef_.reshape(-1, 2600)[0])
+    st_scaler = StandardScaler()
+    st_scaler.fit(X_test)
 
-    # set required regression coeffi.
-    regressionCoef = pd.Series(beta,
-                               index=['x0', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', 'x0^2',
-                                      'x1^2', 'x2^2', 'x3^2', 'x4^2', 'x5^2', 'x6^2', 'x7^2', 'x8^2', 'x9^2', 'x10^2',
-                                      'x11^2'])
+    X_test_scaled = st_scaler.transform(X_test)
 
     # prediction of test set by trained model
-    model_pre_test = lin.predict(poly_reg.fit_transform(X_test))
+    model_pre_test = lin.predict(X_test_scaled)
+    #print(model_pre_test.isna().any())
+    #model_pre_test.fillna(value=0,inplace=True)
+    print("RMSE: ", np.sqrt(metrics.mean_squared_error(y_test, model_pre_test)))
+    print("MAE: ", metrics.mean_absolute_error(np.exp(y_test), model_pre_test))
+    print("r²: ", metrics.r2_score(y_test, model_pre_test))
 
-    print("RMSE: ", np.sqrt(metrics.mean_squared_error(model_pre_test, y_test)))
-    print("MAE: ", metrics.mean_absolute_error(model_pre_test, y_test))
-    print("r²: ", metrics.r2_score(model_pre_test, y_test))
-
-    plt.scatter(y_test, y_test)
+    plt.scatter(model_pre_test, y_test)
 
     # transform data back to normal scale
-    write_file("prediction_duration.csv",  np.exp(y_test))
+    write_file("prediction_duration.csv",  np.exp(model_pre_test))
 
 
 def create_classification_prediction(X, Y):
@@ -53,9 +44,9 @@ def create_classification_prediction(X, Y):
     # read saved model
     model = keras.models.load_model(os.getcwd() + r"\output_data\classif_model.h5")
 
-    model = read_model(True)
     st_scaler = StandardScaler()
 
+    st_scaler.fit(X)
     # scale predictors
     X_test_scaled = st_scaler.transform(X)
 
@@ -68,24 +59,24 @@ def create_classification_prediction(X, Y):
     print("r²: ", metrics.r2_score(Y, y_pred))
 
     # create confusion matrix
-    print(confusion_matrix(Y, y_pred))
+    #print(confusion_matrix(Y, y_pred))
 
-    history_df = pd.DataFrame(model.history)
-    history_df
+    #history_df = pd.DataFrame(model.history)
+    #history_df
 
-    root_metrics_df = history_df[["mse", "val_mse"]].apply(np.sqrt)
-    root_metrics_df.rename({"mse": "rmse", "val_mse": "val_rmse"}, axis=1, inplace=True)
-    root_metrics_df
+    #root_metrics_df = history_df[["mse", "val_mse"]].apply(np.sqrt)
+    #root_metrics_df.rename({"mse": "rmse", "val_mse": "val_rmse"}, axis=1, inplace=True)
+    #root_metrics_df
 
     # create loss plot for epochs
-    fig, ax = plt.subplots(1, 1, figsize=(12, 4), dpi=200)
+    #fig, ax = plt.subplots(1, 1, figsize=(12, 4), dpi=200)
 
-    ax.plot(root_metrics_df["rmse"])
+    #ax.plot(root_metrics_df["rmse"])
 
-    ax.set_xlabel("Epochs")
-    ax.set_ylabel("Root Mean Squared Error")
+    #ax.set_xlabel("Epochs")
+    #ax.set_ylabel("Root Mean Squared Error")
 
-    ax.set_xlim([0, 20 - 1])
+    #ax.set_xlim([0, 20 - 1])
 
-    plt.show()
+    #plt.show()
     write_file("prediction_classif.csv",  y_pred)

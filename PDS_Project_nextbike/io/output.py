@@ -21,5 +21,6 @@ def save_model(model, classif_flag):
         model.save(os.getcwd() + r"\output_data\classif_model.h5")
     # else save as regression model
     else:
+
         pickle.dump(model, open(os.path.join(get_data_path(), "..\\output_data\\regression_model.pkl"), 'wb'))
 
