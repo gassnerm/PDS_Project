@@ -27,10 +27,9 @@ def create_duration_prediction(X_test, y_test):
 
     # prediction of test set by trained model
     model_pre_test = lin.predict(X_test_scaled)
-    #print(model_pre_test.isna().any())
-    #model_pre_test.fillna(value=0,inplace=True)
-    print("RMSE: ", np.sqrt(metrics.mean_squared_error(y_test, model_pre_test)))
-    print("MAE: ", metrics.mean_absolute_error(np.exp(y_test), model_pre_test))
+   # print(model_pre_test.isna().any())
+    print("RMSE: ", np.sqrt(metrics.mean_squared_error(np.exp(y_test), np.exp(model_pre_test))))
+    print("MAE: ", metrics.mean_absolute_error(np.exp(y_test), np.exp(model_pre_test)))
     print("r²: ", metrics.r2_score(y_test, model_pre_test))
 
     plt.scatter(model_pre_test, y_test)

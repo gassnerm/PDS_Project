@@ -18,7 +18,7 @@ def create_prediction_Duration(file):
     df = read_file(r"..\output_data\transform_DF")
     weather = read_file("frankfurt_weather_data2019.csv")
     zc = read_file(r"..\geo_Data\backup_zipcodes.csv")
-    df = df[38000:]
+
     # make a data frame for weather data
     weather = pd.DataFrame(weather)
 
@@ -116,9 +116,9 @@ def create_prediction_Duration(file):
 
 
     # get month as parameter
-    month = pd.get_dummies(X_predictors["month"], drop_first=True)
-    month.columns = ["FE", "MA", "AP", "MA", "JU", "AU", "SE", "OC", "NO", "DE"]
-    X_predictors = X_predictors.join(month)
+    #month = pd.get_dummies(X_predictors["month"], drop_first=True)
+    #month.columns = ["FE", "MA", "AP", "MA", "JU", "AU", "SE", "OC", "NO", "DE"]
+    #X_predictors = X_predictors.join(month)
 
     # create dates for weekly average
     start = dt.datetime(2019, 1, 20)

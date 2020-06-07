@@ -14,7 +14,7 @@ from sklearn.decomposition import PCA
 # trains the regression algorithm
 def train_prediction_duration(X_duration, Y_duration):
 
-    columns = np.array(X_duration.columns).reshape(23,1)
+    columns = np.array(X_duration.columns).reshape(13,1)
     X_duration = X_duration.to_numpy()
     Y_duration = Y_duration.to_numpy()
 
@@ -31,8 +31,8 @@ def train_prediction_duration(X_duration, Y_duration):
     lin_reg.fit(X_train_scaled, Y_duration)
 
     print(" Coeffient", pd.DataFrame(lin_reg.coef_.T, index=["Weekday",  "Borderdistrict",  "EVENING",  "MIDDAY",
-                                                            "MORNING","NIGHT","H1","H2","H3","H4","hourly temperatur","FE","MA","AP",
-                                                            "MA","JU","AU","SE","OC","NO","DE","L1","L2"], columns=["Coefficient"]))
+                                                            "MORNING","NIGHT","H1","H2","H3","H4","hourly temperatur"
+                                                            ,"L1","L2"], columns=["Coefficient"]))
     print("intercept: ", lin_reg.intercept_)
     # save the model to data folder
     save_model(lin_reg, False)
@@ -53,13 +53,15 @@ def train_nn_classification_task(x, y):
     model = keras.Sequential(
             [layers.Dense(9, activation="sigmoid", input_shape=[x_train.shape[1]]),
             layers.Dropout(0.1),
-            layers.Dense(14, activation="sigmoid", ),
+            layers.Dense(9, activation="sigmoid", ),
             layers.Dropout(0.1),
-            layers.Dense(14, activation="sigmoid"),
+            layers.Dense(9, activation="sigmoid"),
+            layers.Dropout(0.1),
+            layers.Dense(9, activation="sigmoid"),
             layers.Dropout(0.1),
             layers.Dense(1)])
 
-    optimizer = keras.optimizers.Adam()
+    optimizer = keras.optimizers.Adam(learning_rate=0.01)
 
     model.compile(loss='mse',
                 optimizer=optimizer,
