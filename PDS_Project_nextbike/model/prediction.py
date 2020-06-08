@@ -58,27 +58,6 @@ def create_classification_prediction(X, Y):
     print("MAE: ", metrics.mean_absolute_error(Y, y_pred))
     print("r²: ", metrics.r2_score(Y, y_pred))
 
-    # create confusion matrix
-    #print(confusion_matrix(Y, y_pred))
-
-    #history_df = pd.DataFrame(model.history)
-    #history_df
-
-    #root_metrics_df = history_df[["mse", "val_mse"]].apply(np.sqrt)
-    #root_metrics_df.rename({"mse": "rmse", "val_mse": "val_rmse"}, axis=1, inplace=True)
-    #root_metrics_df
-
-    # create loss plot for epochs
-    #fig, ax = plt.subplots(1, 1, figsize=(12, 4), dpi=200)
-
-    #ax.plot(root_metrics_df["rmse"])
-
-    #ax.set_xlabel("Epochs")
-    #ax.set_ylabel("Root Mean Squared Error")
-
-    #ax.set_xlim([0, 20 - 1])
-
-    #plt.show()
     write_file("prediction_classif.csv",  y_pred)
 
 
