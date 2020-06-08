@@ -18,7 +18,7 @@ def create_prediction_Duration(file):
     df = read_file(r"..\output_data\transform_DF")
     weather = read_file("frankfurt_weather_data2019.csv")
     zc = read_file(r"..\geo_Data\backup_zipcodes.csv")
-    df = df[38000:]
+
     # make a data frame for weather data
     weather = pd.DataFrame(weather)
 
@@ -116,9 +116,9 @@ def create_prediction_Duration(file):
 
 
     # get month as parameter
-    month = pd.get_dummies(X_predictors["month"], drop_first=True)
-    month.columns = ["FE", "MA", "AP", "MA", "JU", "AU", "SE", "OC", "NO", "DE"]
-    X_predictors = X_predictors.join(month)
+    #month = pd.get_dummies(X_predictors["month"], drop_first=True)
+    #month.columns = ["FE", "MA", "AP", "MA", "JU", "AU", "SE", "OC", "NO", "DE"]
+    #X_predictors = X_predictors.join(month)
 
     # create dates for weekly average
     start = dt.datetime(2019, 1, 20)
@@ -192,7 +192,7 @@ def create_predictors_classification(file):
     location_Uni = pd.DataFrame(data=[["point A", 8.692339207868319, 50.130519449999994]],
                                 columns=["Describtion", "long", "latitude"])
 
-    df = df[38000:]
+    #df = df[38000:]
     # calculate durantion between center point of univer. and trip end classifi
     distance_begin = pd.Series(index=df.index, data=list(map(
         lambda x: geo.distance(tuple(location_Uni.loc[0]["long":"latitude"]),
@@ -268,29 +268,13 @@ def create_predictors_classification(file):
             df.loc[df[(df["Zip_codes"] == plz) & (df["week"] == i)].index, "zip_pro"] = value
     df["zip_pro"].value_counts(bins=20)
 
-
-
-
-
-    # get properbility that station start will go towars univerity based on start informtaion
+    # get pro. that station start will go towars univerity based on start informtaion
     Start_Station = df["Start_Station"].value_counts()
     for std in Start_Station.index:
         for w in range(0, 52):
             value = df[(df["uni"] == 1) & (df["Start_Station"] == std) & (df["week"] < w)]["uni"].count()
             value = value / (df[(df["Start_Station"] == std) & (df["week"] < w)])["uni"].count()
             df.loc[df[(df["Start_Station"] == std) & (df["week"] == w)].index, "Start_Station_pro"] = value
-    df["Start_Station_pro"].value_counts(bins=20)
-
-    hour = df["hour"].value_counts()
-
-    for hour in hour.index:
-        for i in range(0, 52):
-            value = df[(df["uni"] == 1) & (df["hour"] == hour) & (df["month"] < i)]["uni"].count()
-            value = (df[(df["hour"] == hour) & (df["month"] < i)])["uni"].count()
-            df.loc[df[(df["hour"] == hour) & (df["month"] == i)].index, "hour_pro"] = value
-
-    df.fillna(value=0, inplace=True)
-
 
 
     # Drop target from predictor

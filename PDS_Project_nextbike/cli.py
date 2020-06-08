@@ -55,10 +55,10 @@ def main(train, transform, csv_file, predict, testing_code):
         csv_file = set_data_frame.create_df(df)
 
         # create the predictors for classification
-        #X_clas, Y_Class = create_predictors.create_predictors_classification(csv_file)
+        X_clas, Y_Class = create_predictors.create_predictors_classification(csv_file)
 
         # train the model for trip direction and save it
-        #x_test, y_test = model.train_nn_classification_task(X_clas, Y_Class)
+        x_test, y_test = model.train_nn_classification_task(X_clas, Y_Class)
 
         # create predictors for trip duration
         x_duration, y_duration = create_predictors.create_prediction_Duration(csv_file)
