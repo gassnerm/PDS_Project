@@ -191,7 +191,7 @@ def create_prediction_Duration(file, trainingflag):
 
     # fill na values
     X_predictors.fillna(value=0, inplace=True)
-
+    print(X_predictors)
     print("Feature creation finished")
     return X_predictors, Y
 
@@ -199,9 +199,10 @@ def create_prediction_Duration(file, trainingflag):
 # training flag to define if the call is for training to drop ether the training or the test set
 def create_predictors_classification(file, training_Flag):
 
-    # set data frame
+    # set data frame and reset index duplicated index
+    # in df because previes append
     df = file
-
+    df.reset_index(inplace=True, drop=True)
 
     print(len(df))
     weather = read_file(r"frankfurt_weather_data2019.csv")

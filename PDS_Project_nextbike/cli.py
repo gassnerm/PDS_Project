@@ -48,7 +48,7 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
         df_tran = set_data_frame.create_df(df)
         df_test = set_data_frame.create_df(read_file("frankfurt.csv"))
         df_tran = df_tran.append(df_test)
-        df_tran.reset_index(inplace=True)
+        df_tran.reset_index(inplace=True, drop=True)
         print("predict:", len(df_tran))
 
         # create test set predictors for classification flag to set the if the training will

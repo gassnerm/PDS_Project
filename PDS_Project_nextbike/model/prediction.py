@@ -13,6 +13,7 @@ from  sklearn.metrics import accuracy_score
 
 def create_duration_prediction(X_test, y_test):
 
+
     # set to array
     X_test = X_test.to_numpy()
     y_test = y_test.to_numpy()
