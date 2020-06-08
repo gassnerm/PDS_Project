@@ -9,7 +9,9 @@ import pandas as pd
 def write_file(target_path,  df):
     # os.system("pip install --user tensorflow==2.00 ")
     # safe df to file
-    print("Csv will be save to ", os.path.join(os.getcwd(), target_path))
+
+    print("Csv will be save to  \\output_data\\ ", os.path.join(os.getcwd(), target_path))
+
     file = pd.DataFrame(df)
     file.to_csv(os.path.join(os.getcwd()) + "\\output_data\\" + target_path)
 
