@@ -268,29 +268,13 @@ def create_predictors_classification(file):
             df.loc[df[(df["Zip_codes"] == plz) & (df["week"] == i)].index, "zip_pro"] = value
     df["zip_pro"].value_counts(bins=20)
 
-
-
-
-
-    # get properbility that station start will go towars univerity based on start informtaion
+    # get pro. that station start will go towars univerity based on start informtaion
     Start_Station = df["Start_Station"].value_counts()
     for std in Start_Station.index:
         for w in range(0, 52):
             value = df[(df["uni"] == 1) & (df["Start_Station"] == std) & (df["week"] < w)]["uni"].count()
             value = value / (df[(df["Start_Station"] == std) & (df["week"] < w)])["uni"].count()
             df.loc[df[(df["Start_Station"] == std) & (df["week"] == w)].index, "Start_Station_pro"] = value
-    df["Start_Station_pro"].value_counts(bins=20)
-
-    hour = df["hour"].value_counts()
-
-    for hour in hour.index:
-        for i in range(0, 52):
-            value = df[(df["uni"] == 1) & (df["hour"] == hour) & (df["month"] < i)]["uni"].count()
-            value = (df[(df["hour"] == hour) & (df["month"] < i)])["uni"].count()
-            df.loc[df[(df["hour"] == hour) & (df["month"] == i)].index, "hour_pro"] = value
-
-    df.fillna(value=0, inplace=True)
-
 
 
     # Drop target from predictor

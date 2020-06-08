@@ -6,6 +6,7 @@ from ..io import read_model, plt, write_file
 import numpy as np
 from tensorflow import keras
 import os
+import seaborn as sns
 
 
 def create_duration_prediction(X_test, y_test):
@@ -79,3 +80,5 @@ def create_classification_prediction(X, Y):
 
     #plt.show()
     write_file("prediction_classif.csv",  y_pred)
+
+
