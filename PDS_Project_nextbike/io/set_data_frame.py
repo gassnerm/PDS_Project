@@ -15,6 +15,9 @@ def create_df(base):
     # parse string series datetime to datetime
     base["datetime"] = pd.to_datetime(base["datetime"], format="%Y-%m-%d %H:%M:%S")
 
+    # reset the index for the test and training data
+    base.reset_index(inplace=True, drop=True)
+
     # read all data that contains trips from data set drop all first and last rows
     base_trips = base[(base["trip"].str.contains("(start|end)"))]
 
@@ -98,6 +101,7 @@ def create_df(base):
 
     print("Vor allocation", trip_wduration)
 
+    #drop the batch bookings in the test set see report
     trip_wduration = drop_reallocation_trips(trip_wduration)
 
 

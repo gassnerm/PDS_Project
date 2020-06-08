@@ -40,31 +40,31 @@ def train_prediction_duration(X_duration, Y_duration):
 
 
 def train_nn_classification_task(x, y):
-    # set to array
-    x = x.to_numpy()
-    y = y.to_numpy()
+
+
+
     # splitting predictor and target
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+    #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
     st_scaler = StandardScaler()
-    st_scaler.fit(x_train)
-    X_train_scaled = st_scaler.transform(x_train)
+    st_scaler.fit(x)
+    X_train_scaled = st_scaler.transform(x)
 
 
     model = keras.Sequential(
-            [layers.Dense(17, activation="sigmoid", input_shape=[x_train.shape[1]]),
+            [layers.Dense(7, activation="sigmoid", input_shape=[X_train_scaled.shape[1]]),
             layers.Dropout(0.1),
-            layers.Dense(17, activation="sigmoid", ),
+            layers.Dense(7, activation="sigmoid", ),
             layers.Dropout(0.1),
-            layers.Dense(17, activation="sigmoid", ),
+            layers.Dense(7, activation="sigmoid", ),
             layers.Dropout(0.1),
-            layers.Dense(17, activation="sigmoid", ),
+            layers.Dense(7, activation="sigmoid", ),
             layers.Dropout(0.1),
             layers.Dense(1)])
 
     optimizer = keras.optimizers.Adam(learning_rate=0.01)
 
-    model.compile(loss='rmse',
+    model.compile(loss='mse',
                 optimizer=optimizer,
                 metrics=["mae"])
 
@@ -72,12 +72,14 @@ def train_nn_classification_task(x, y):
     epochs = 20
     batch_size = 5000
 
+    print(x)
+    print(X_train_scaled)
 
-    # create the model history and fit the model
-    model.fit(X_train_scaled, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.2)
+    # create the model htory and fit the model
+    model.fit(X_train_scaled, y, batch_size=batch_size, epochs=epochs, validation_split=0.2)
 
     save_model(model, True)
 
-    # return test set and the history epos
-    return x_test, y_test
+    # return test set
+    return x, y
 

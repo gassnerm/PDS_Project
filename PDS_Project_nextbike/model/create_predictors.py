@@ -5,17 +5,20 @@ import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime as dt
-from ..io import read_file, get_data_path
+from ..io import read_file, get_data_path, set_data_frame
 from geopy import distance as geo
 
 
-def create_prediction_Duration(file):
+# training flag to define if the call is for training to drop ether the training or the test set
+def create_prediction_Duration(file, trainingflag):
 
     # parse date to date time
     parse_dates = lambda x: dt.datetime.strftime(x, "%Y%M%D%H")
 
     # import the df, zipcode and the weather data
-    df = read_file(r"..\output_data\transform_DF")
+    df = file
+
+    # append test set for features
     weather = read_file("frankfurt_weather_data2019.csv")
     zc = read_file(r"..\geo_Data\backup_zipcodes.csv")
 
@@ -28,6 +31,7 @@ def create_prediction_Duration(file):
     # Take the basic df
     X_predictors = df
 
+    print("Drop unneeded columns")
     # Create the predictor matrix columns that are not needed
     X_predictors = X_predictors.drop(columns=["Start_Latitude"
         , "Bike_number"
@@ -122,69 +126,84 @@ def create_prediction_Duration(file):
 
     # create dates for weekly average
     start = dt.datetime(2019, 1, 20)
-    dates = pd.date_range(start=start, end=dt.datetime(2019, 6, 30), periods=162)
-    start = dt.datetime(2019, 8, 1)
-    dates2 = pd.date_range(start=start, end=dt.datetime(2019, 12, 31), periods=153)
-    dates = dates.append(dates2)
+    dates = pd.date_range(start=start, end=dt.datetime(2019, 12, 31), periods=346)
     dates
 
 
-
-    median = pd.Series(index=dates, data=0)
+    # set mean series
     mean = pd.Series(index=dates, data=0)
-    std = pd.Series(index=dates, data=0)
 
     count = 0
 
     # create dates for each day in the data set
-    for i in range(0, 315):
+    for i in range(0, 344):
 
         # calculate average duration for each day
         start = dates[count]
-        if i == 314:
+        if i == 344:
 
-            # calculate the mean for day
-            mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= dates[314])]["Duration"].describe()[1]
-            break
+                # calculate the mean for day
+                mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= dates[344])]["Duration"].describe()[1]
+                break
         # calculate the mean for days
         end = dates[count + 1]
-        mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= start) & (pd.to_datetime(df["Start_Time"]) < end)][
-            "Duration"].describe()[1]
+        try:
+            mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= start) & (pd.to_datetime(df["Start_Time"]) < end)]["Duration"].describe()[1]
+        except KeyError:
+            mean.loc[dates[count]] = 0
         count += 1
+    print("Mean series: ", mean)
 
 
-
-
-
-    # set the daily average of the last 2 days
-    X_predictors["L1"] = pd.Series(index=df.index, data=list(map(lambda x:
-                                                                 mean.shift(1)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))], df.index)))
-    X_predictors["L2"] = pd.Series(index=df.index, data=list(map(lambda x:
-                                                                 mean.shift(2)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))], df.index)))
+    try:
+        # set the daily average of the last 2 days
+        X_predictors["L1"] = pd.Series(index=df.index, data=list(map(lambda x:
+                                                                     mean.shift(1)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))], df.index)))
+    except KeyError:
+        print("wrong")
+    try:
+        X_predictors["L2"] = pd.Series(index=df.index, data=list(map(lambda x:
+                                                                     mean.shift(2)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))], df.index)))
+    except KeyError:
+        print("wrong")
 
     # fill null values, no future information
     X_predictors.fillna(value=0, inplace=True)
 
+    df = df.round(3)
+
+    if trainingflag:
+        # drop test set
+        X_predictors = X_predictors[X_predictors["month"] != "07"]
+    else:
+        # drop test set
+        X_predictors = X_predictors[X_predictors["month"] == "07"]
+
+
     # Set target to Y (durations)
     Y = pd.DataFrame(columns=["Duration"], data=X_predictors["Duration"])
+
 
     # Drop duration from predictor
     X_predictors.drop(
         columns=["month", "Start_Time", "Duration", "hour", "date", "Zip_codes", "Start_Time_tem"],
         inplace=True)
 
-    df = df.round(3)
-    print(df.isnull().any())
-
+    # fill na values
     X_predictors.fillna(value=0, inplace=True)
-    print(X_predictors)
+
+    print("Feature creation finished")
     return X_predictors, Y
 
 
-def create_predictors_classification(file):
+# training flag to define if the call is for training to drop ether the training or the test set
+def create_predictors_classification(file, training_Flag):
 
     # set data frame
     df = file
+
+
+    print(len(df))
     weather = read_file(r"frankfurt_weather_data2019.csv")
     weather = pd.DataFrame(weather)
 
@@ -245,14 +264,10 @@ def create_predictors_classification(file):
     df["Borderdistrict"] = df["Borderdistrict"].astype(int)
     df["Weekday"] = df["Weekday"].astype(int)
 
-    # set target values
-    target_vector = df["uni"]
 
-    month = pd.get_dummies(df["month"], drop_first=True)
-    month.columns = ["FE", "MA", "AP", "MA", "JU", "AU", "SE", "OC", "NO", "DE"]
 
-    # join dummy variables
-    df = df.join(month)
+
+
 
     # get all zip codes
     zipcodes = df["Zip_codes"].value_counts()
@@ -268,7 +283,7 @@ def create_predictors_classification(file):
             df.loc[df[(df["Zip_codes"] == plz) & (df["week"] == i)].index, "zip_pro"] = value
     df["zip_pro"].value_counts(bins=20)
 
-    # get pro. that station start will go towars univerity based on start informtaion
+    # get pro. that station start will go towards university based on start information
     Start_Station = df["Start_Station"].value_counts()
     for std in Start_Station.index:
         for w in range(0, 52):
@@ -277,18 +292,31 @@ def create_predictors_classification(file):
             df.loc[df[(df["Start_Station"] == std) & (df["week"] == w)].index, "Start_Station_pro"] = value
 
 
+
+
+    if training_Flag:
+        # drop test set
+        df = df[df["month"] != 7]
+    else:
+        # drop test set
+        df = df[df["month"] == 7]
+
+
+    # set target values
+    target_vector = df["uni"]
+
+
     # Drop target from predictor
     df.drop(columns=["uni"], inplace=True)
 
 
 
-
-
     print(df)
+
     # drop columns not needed
-    df.drop(columns=["hourly temperatur","Zip_codes", "Start_Station", "Start_Time", "Start_Longitude", "Start_Latitude",
+    df.drop(columns=["month","hourly temperatur","Zip_codes", "Start_Station", "Start_Time", "Start_Longitude", "Start_Latitude",
                      "end_d", "date", "End_Bikes", "Bike_number", "End_time", "End_Longitude", "End_Latitude",
-                     "End_Station_number", "Duration", "Bikes_on_position", "month", "hour","week"], inplace=True)
+                     "End_Station_number", "Duration", "Bikes_on_position", "hour","week"], inplace=True)
     df = df.round(3)
     print(df.isnull().any())
     df.fillna(value=0, inplace=True)

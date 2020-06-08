@@ -7,6 +7,8 @@ import numpy as np
 from tensorflow import keras
 import os
 import seaborn as sns
+from  sklearn.metrics import accuracy_score
+
 
 
 def create_duration_prediction(X_test, y_test):
@@ -28,15 +30,16 @@ def create_duration_prediction(X_test, y_test):
 
     # prediction of test set by trained model
     model_pre_test = lin.predict(X_test_scaled)
-   # print(model_pre_test.isna().any())
-    print("RMSE: ", np.sqrt(metrics.mean_squared_error(np.exp(y_test), np.exp(model_pre_test))))
-    print("MAE: ", metrics.mean_absolute_error(np.exp(y_test), np.exp(model_pre_test)))
+
+
+    print("RMSE: ", np.sqrt(metrics.mean_squared_error(y_test, model_pre_test)))
+    print("MAE: ", metrics.mean_absolute_error(y_test, model_pre_test))
     print("r²: ", metrics.r2_score(y_test, model_pre_test))
 
     plt.scatter(model_pre_test, y_test)
 
     # transform data back to normal scale
-    write_file("prediction_duration.csv",  np.exp(model_pre_test))
+    write_file("prediction_duration.csv",  model_pre_test)
 
 
 def create_classification_prediction(X, Y):
@@ -47,6 +50,7 @@ def create_classification_prediction(X, Y):
     st_scaler = StandardScaler()
 
     st_scaler.fit(X)
+
     # scale predictors
     X_test_scaled = st_scaler.transform(X)
 
@@ -58,6 +62,9 @@ def create_classification_prediction(X, Y):
     print("MAE: ", metrics.mean_absolute_error(Y, y_pred))
     print("r²: ", metrics.r2_score(Y, y_pred))
 
+    # get the metrics for the test set
+    print(accuracy_score(Y, y_pred.round()))
+    print(confusion_matrix(Y, y_pred.round()))
     write_file("prediction_classif.csv",  y_pred)
 
 
