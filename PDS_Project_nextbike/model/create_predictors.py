@@ -136,42 +136,34 @@ def create_prediction_Duration(file, trainingflag):
     count = 0
 
     # create dates for each day in the data set
-    for i in range(0, 344):
+    for i in range(0, 346):
 
         # calculate average duration for each day
         start = dates[count]
-        if i == 344:
+        if i == 345:
 
                 # calculate the mean for day
-                mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= dates[344])]["Duration"].describe()[1]
+                mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= dates[345])]["Duration"].describe()[1]
                 break
         # calculate the mean for days
         end = dates[count + 1]
-        try:
-            mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= start) & (pd.to_datetime(df["Start_Time"]) < end)]["Duration"].describe()[1]
-        except KeyError:
-            mean.loc[dates[count]] = 0
+        mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= start) & (pd.to_datetime(df["Start_Time"]) < end)]["Duration"].describe()[1]
         count += 1
-    print("Mean series: ", mean)
+    print("Dates series: ", dates)
 
 
-    try:
-        # set the daily average of the last 2 days
-        X_predictors["L1"] = pd.Series(index=df.index, data=list(map(lambda x:
-                                                                     mean.shift(1)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))], df.index)))
-    except KeyError:
-        print("wrong")
-    try:
-        X_predictors["L2"] = pd.Series(index=df.index, data=list(map(lambda x:
-                                                                     mean.shift(2)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))], df.index)))
-    except KeyError:
-        print("wrong")
+    # calculated hourly mean for duration
+    X_predictors["L1"] = pd.Series(index=df.index, data=list(map(lambda x: mean.shift(1)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))], df.index)))
+    X_predictors["L2"] = pd.Series(index=df.index, data=list(map(lambda x: mean.shift(2)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))], df.index)))
 
     # fill null values, no future information
     X_predictors.fillna(value=0, inplace=True)
 
+
+    # round every value to 3 decimal
     df = df.round(3)
 
+    # if model is trained drop test set after feature creation for predict drop train set
     if trainingflag:
         # drop test set
         X_predictors = X_predictors[X_predictors["month"] != "07"]
@@ -189,9 +181,10 @@ def create_prediction_Duration(file, trainingflag):
         columns=["month", "Start_Time", "Duration", "hour", "date", "Zip_codes", "Start_Time_tem"],
         inplace=True)
 
+    print("fill null values")
     # fill na values
     X_predictors.fillna(value=0, inplace=True)
-    print(X_predictors)
+
     print("Feature creation finished")
     return X_predictors, Y
 

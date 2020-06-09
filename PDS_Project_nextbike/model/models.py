@@ -70,10 +70,9 @@ def train_nn_classification_task(x, y):
 
     # set parameter for nn epochs and batch size
     epochs = 20
-    batch_size = 5000
+    batch_size = 4000
 
-    print(x)
-    print(X_train_scaled)
+    print("fit the neuronal network")
 
     # create the model htory and fit the model
     model.fit(X_train_scaled, y, batch_size=batch_size, epochs=epochs, validation_split=0.2)
