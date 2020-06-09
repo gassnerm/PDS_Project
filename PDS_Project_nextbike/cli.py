@@ -5,7 +5,8 @@ from .io import input, set_data_frame, output, save_model, read_file
 from datetime import datetime
 from .model import train_nn_classification_task, create_predictors, prediction
 
-
+# click commands
+# testing option only for debuging used
 @click.command()
 @click.option('--train/--no-train', default=False, help="Train the model. Use the frankfurt_all.csv file train the model. "
                                                         "It will split the test and the training set  ")
@@ -20,7 +21,7 @@ from .model import train_nn_classification_task, create_predictors, prediction
 @click.option('--testing_code/--no_testing', default=False, help="Can be used for prototyping")
 def main(train, transform, csv_file, predict, testing_code, target_file):
 
-    # create intial df of trip format
+    # create initial df of trip format
     if transform:
         # read file return data frame object
         df = read_file(csv_file)
@@ -37,8 +38,8 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
         else:
             output.write_file(target_file, df_tran)
 
-
-    # predict model
+    # command that execute the prediction for both prediction
+    # based on stored model in output_data folder
     if predict:
 
         # read file return data frame object
@@ -78,10 +79,10 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
         csv_file = set_data_frame.create_df(df)
 
         print("Load test set to create feature preditore for past values ")
+
         # append test data to create features
         df_test = set_data_frame.create_df(read_file("frankfurt_test.csv"))
         csv_file = csv_file.append(df_test)
-
 
         print("Train nn for classification")
         # create the predictors for classification and set train flag to
@@ -102,5 +103,6 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
         # train the model for duration and save it
         model.train_prediction_duration(x_duration, y_duration)
 
+# entry point for cli
 if __name__ == '__main__':
     main()

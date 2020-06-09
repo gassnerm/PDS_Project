@@ -1,16 +1,21 @@
 import os
 import pandas as pd
-import datetime as dt
 import numpy as np
-import matplotlib.pyplot as plt
 
 
+# set default data path methode
 def get_data_path():
+
     if os.path.isdir(os.path.join(os.getcwd(), 'data')):
+
         return os.path.join(os.getcwd(), 'data')
+
     elif os.path.isdir(os.path.join(os.getcwd(), "../data")):
+
         return os.path.join(os.getcwd(), "../data")
+
     else:
+
         raise FileNotFoundError
 
 

@@ -1,20 +1,23 @@
 from geopy.geocoders import Nominatim
 from ratelimit import limits, sleep_and_retry
 import pandas as pd
-import numpy as np
+
 
 index_location = df["Start_Latitude"].str.cat(df["Start_Longitude"], sep=", ").value_counts().index
+gc  = Nominatim(user_agent="fintu-blog-geocoding-python", timeout=10)
 
-gc = Nominatim(user_agent="fintu-blog-geocoding-python", timeout=10)
 
-
+# rate limiter due to api usage rules 1 call per secound
 @sleep_and_retry
 @limits(1, 1)
 def rate_limited_geocode(query):
     try:
+        # extract zip code out of respond
         s = gc.geocode(query)[0].split(",")[-2].lstrip()
         print(s)
         print(query)
+    # trips contains zipcodes and coordinate that are not in germany there for the
+    # error occure during run time because zip codes not accesable
     except TypeError as e:
         return "ERROR"
     except IndexError as e2:
@@ -22,13 +25,16 @@ def rate_limited_geocode(query):
     return s
 
 
+# interface zipcode source due to performance issues pre import for presentation
 def geocode(cordinates):
     lookup_query = cordinates
     lookup_result = rate_limited_geocode(lookup_query)
 
     return lookup_result
 
-# df["geo_location"] = df.progress_apply(geocode, axis=1)
+#df["geo_location"] = df.progress_apply(geocode, axis=1)
+
+# due to connection timeouts separation of trip location in 14 packages
 x = pd.Series(index= index_location[:1000], data = list(map(lambda x: geocode(x), index_location[:1000])))
 print("x")
 x1 = pd.Series(index= index_location[1000:2000], data = list(map(lambda x: geocode(x), index_location[1000:2000])))
@@ -61,11 +67,11 @@ x14 = pd.Series(index= index_location[14000:15000], data = list(map(lambda x: ge
 print("x14")
 x15 = pd.Series(index= index_location[15000:], data = list(map(lambda x: geocode(x), index_location[15000:])))
 
-
+# append zip codes to array
 zipcodes_Array = x.append(x1).append(x2).append(x3).append(x4).append(x5).append(x6).append(x7)\
     .append(x8).append(x9).append(x10).append(x11).append(x12).append(x13).append(x14).append(x15)
 
-
+# add colum
 zipcode_df =  pd.DataFrame(zipcodes_Array)
 zipcode_df.columns = ["zipcodes"]
 

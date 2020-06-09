@@ -20,6 +20,8 @@ def create_prediction_Duration(file, trainingflag):
 
     # append test set for features
     weather = read_file("frankfurt_weather_data2019.csv")
+
+    # read zip codes in for df
     zc = read_file(r"..\geo_Data\backup_zipcodes.csv")
 
     # make a data frame for weather data
@@ -52,7 +54,7 @@ def create_prediction_Duration(file, trainingflag):
     X_predictors["Borderdistrict"] = X_predictors["Zip_codes"].isin([65929, 60529, 60549, 65931, 65936, 60528, 60388, 60437, 60438, 60439,
                                                  60433, 60598, 60599, 63067, 60314, 60386]).astype(int)
 
-
+    print("Create time features")
     # Create intervalls for hours
     X_predictors["hour"] = X_predictors["date"].astype(str).str.extract("([0-9]{2}$)")
     X_predictors["month"] = X_predictors["date"].str.replace("([0-9]{4}$)", "")
@@ -73,14 +75,18 @@ def create_prediction_Duration(file, trainingflag):
     # format date for hour
     X_predictors["Start_Time_tem"] = pd.to_datetime(X_predictors["date"], format=("%Y%m%d%H"))
     X_predictors["Duration"] = X_predictors["Duration"].astype(float)
+
+    # get the average duration of hours using date
     hours = X_predictors.groupby("Start_Time_tem")["Duration"].mean()
     hours = pd.DataFrame(hours)
     count = 0
 
-    print("Start")
-    # create the hourly averages of the last 7 hours before booking
+    print("Start hourly average feature")
+
+    # create the hourly averages of the last 4 hours before booking
     for i in X_predictors.index:
 
+        # Method generate the last hourly averages refer. to the actual booking
         try:
             count += 1
             X_predictors.loc[i, "H1"] = hours.loc[X_predictors.loc[i, "Start_Time_tem"] - dt.timedelta(hours=1)][
@@ -102,7 +108,7 @@ def create_prediction_Duration(file, trainingflag):
                 "Duration"]
         except KeyError:
             continue
-    print("end")
+    print("end average hourly duration")
 
 
     # set temp to datetype string
@@ -144,12 +150,13 @@ def create_prediction_Duration(file, trainingflag):
                 break
         # calculate the mean for days
         end = dates[count + 1]
+
+        # safe mean to series "mean"
         mean.loc[dates[count]] = df[(pd.to_datetime(df["Start_Time"]) >= start) & (pd.to_datetime(df["Start_Time"]) < end)]["Duration"].describe()[1]
         count += 1
-    print("Dates series: ", dates)
+    print("Average daily mean calculated.")
 
-
-    # calculated hourly mean for duration
+    # calculated daily mean for duration by using dates as key in the mean series calculated before
     X_predictors["L1"] = pd.Series(index=df.index, data=list(map(lambda x: mean.shift(1)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))], df.index)))
     X_predictors["L2"] = pd.Series(index=df.index, data=list(map(lambda x: mean.shift(2)[pd.to_datetime(pd.to_datetime(df.loc[x]["Start_Time"]).strftime("%Y-%m-%d"))], df.index)))
 
@@ -160,16 +167,10 @@ def create_prediction_Duration(file, trainingflag):
     # round every value to 3 decimal
     df = df.round(3)
 
-
-
-
-
-
     # Drop duration from predictor
     X_predictors.drop(
         columns=["Start_Time", "hour", "date", "Zip_codes", "Start_Time_tem"],
         inplace=True)
-
 
     # if model is trained drop test set after feature creation for predict drop train set
     if trainingflag:
@@ -184,9 +185,6 @@ def create_prediction_Duration(file, trainingflag):
     X_predictors.drop(
         columns=["month","Duration"],
         inplace=True)
-
-
-
 
     print("fill null values")
     # fill na values
@@ -204,7 +202,7 @@ def create_predictors_classification(file, training_Flag):
     df = file
     df.reset_index(inplace=True, drop=True)
 
-    print(len(df))
+    print("Info: Read in weather data:")
     weather = read_file(r"frankfurt_weather_data2019.csv")
     weather = pd.DataFrame(weather)
 
@@ -212,22 +210,26 @@ def create_predictors_classification(file, training_Flag):
     location_Uni = pd.DataFrame(data=[["point A", 8.692339207868319, 50.130519449999994]],
                                 columns=["Describtion", "long", "latitude"])
 
-    #df = df[38000:]
-    # calculate durantion between center point of univer. and trip end classifi
+    print("Info: Calculating distance.")
+    # calculate distance towards the university compared to end of trip
     distance_begin = pd.Series(index=df.index, data=list(map(
         lambda x: geo.distance(tuple(location_Uni.loc[0]["long":"latitude"]),
                                tuple((df.loc[x]["Start_Longitude"], df.loc[x]["Start_Latitude"]))).km, df.index)))
+
+    # Calculated end distance university
     distance_end = pd.Series(index=df.index, data=list(map(
         lambda x: geo.distance(tuple(location_Uni.loc[0]["long":"latitude"]),
                                tuple((df.loc[x]["End_Longitude"], df.loc[x]["End_Latitude"]))).km, df.index)))
 
-    Dist = pd.DataFrame(distance_begin)
+    print("Info: Calculating distance finished.")
+
+    dist = pd.DataFrame(distance_begin)
 
     # Create target column
-    Dist["end_d"] = distance_end
-    Dist["uni"] = Dist[0] > Dist["end_d"]
-    Dist["uni"] = Dist["uni"].astype(int)
-    df = Dist.join(df)
+    dist["end_d"] = distance_end
+    dist["uni"] = dist[0] > dist["end_d"]
+    dist["uni"] = dist["uni"].astype(int)
+    df = dist.join(df)
 
     df["weather"] = 0
 
@@ -236,10 +238,10 @@ def create_predictors_classification(file, training_Flag):
     df["date"] = df["date"].str.replace(":*:.*", "")
     df["date"] = df["date"].str.replace("\s", "")
 
-
-    # set temp to datetype string
+    # set temp to date type string
     weather.index = weather.index.astype(str)
 
+    print("Info: Join weather data to the data frame.")
     # Join weather dates to predictor matrix
     df = df.join(weather, on="date", how="inner")
 
@@ -266,16 +268,13 @@ def create_predictors_classification(file, training_Flag):
     df["Weekday"] = df["Weekday"].astype(int)
 
 
-
-
-
-
     # get all zip codes
     zipcodes = df["Zip_codes"].value_counts()
 
     # creat week number
     df["week"] = pd.to_datetime(df["Start_Time"]).dt.strftime('%W').astype(int)
 
+    print("Info: Generate zip code feature ")
     # generate feature for zip codes pro.
     for plz in zipcodes.index:
         for i in range(0, 52):
@@ -284,6 +283,7 @@ def create_predictors_classification(file, training_Flag):
             df.loc[df[(df["Zip_codes"] == plz) & (df["week"] == i)].index, "zip_pro"] = value
     df["zip_pro"].value_counts(bins=20)
 
+    print("Info: Generate Station feature  feature ")
     # get pro. that station start will go towards university based on start information
     Start_Station = df["Start_Station"].value_counts()
     for std in Start_Station.index:
@@ -292,28 +292,24 @@ def create_predictors_classification(file, training_Flag):
             value = value / (df[(df["Start_Station"] == std) & (df["week"] < w)])["uni"].count()
             df.loc[df[(df["Start_Station"] == std) & (df["week"] == w)].index, "Start_Station_pro"] = value
 
-
-
-
+    # used to decide which mode feature are created for
+    # Feature generation of past values requires full data set
     if training_Flag:
+        print("Info: Training mode drop test set ")
         # drop test set
         df = df[df["month"] != 7]
     else:
+        print("Info: Prediction mode drop training set ")
         # drop test set
         df = df[df["month"] == 7]
-
 
     # set target values
     target_vector = df["uni"]
 
-
     # Drop target from predictor
     df.drop(columns=["uni"], inplace=True)
 
-
-
-    print(df)
-
+    print("Info: Drop not needed columns")
     # drop columns not needed
     df.drop(columns=["month","hourly temperatur","Zip_codes", "Start_Station", "Start_Time", "Start_Longitude", "Start_Latitude",
                      "end_d", "date", "End_Bikes", "Bike_number", "End_time", "End_Longitude", "End_Latitude",
