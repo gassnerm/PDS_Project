@@ -4,7 +4,6 @@ import datetime as dt
 from .input import read_file
 from .utils import *
 from .output import write_file
-from .createStatisics import create_statistics
 
 
 def create_df(base):

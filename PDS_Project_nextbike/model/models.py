@@ -13,14 +13,17 @@ from sklearn.decomposition import PCA
 
 
 # trains the regression algorithm
-def train_prediction_duration(X_duration, Y_duration):
+def train_prediction_duration(X_duration, Y_duration, scaler):
+
 
     columns = np.array(X_duration.columns).reshape(13,1)
     X_duration = X_duration.to_numpy()
     Y_duration = Y_duration.to_numpy()
 
+
     # use log transformation
     Y_duration = np.log(Y_duration)
+
 
     st_scaler = StandardScaler()
     st_scaler.fit(X_duration)
@@ -50,6 +53,7 @@ def train_nn_classification_task(x, y):
     st_scaler.fit(x)
     X_train_scaled = st_scaler.transform(x)
 
+    y = np.array(y)
 
     model = keras.Sequential(
             [layers.Dense(7, activation="sigmoid", input_shape=[X_train_scaled.shape[1]]),

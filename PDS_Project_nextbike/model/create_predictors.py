@@ -1,5 +1,5 @@
 import os
-
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import seaborn as sns
 import numpy as np
@@ -163,30 +163,44 @@ def create_prediction_Duration(file, trainingflag):
     # round every value to 3 decimal
     df = df.round(3)
 
+
+
+
+
+
+    # Drop duration from predictor
+    X_predictors.drop(
+        columns=["Start_Time", "hour", "date", "Zip_codes", "Start_Time_tem"],
+        inplace=True)
+
+
+
+    scaler= StandardScaler()
+    scaler.fit(X_predictors.drop(columns=["month","Duration"]))
+
     # if model is trained drop test set after feature creation for predict drop train set
     if trainingflag:
+
         # drop test set
         X_predictors = X_predictors[X_predictors["month"] != "07"]
     else:
         # drop test set
         X_predictors = X_predictors[X_predictors["month"] == "07"]
 
-
-    # Set target to Y (durations)
-    Y = pd.DataFrame(columns=["Duration"], data=X_predictors["Duration"])
-
-
-    # Drop duration from predictor
+    Y = X_predictors["Duration"]
     X_predictors.drop(
-        columns=["month", "Start_Time", "Duration", "hour", "date", "Zip_codes", "Start_Time_tem"],
+        columns=["month","Duration"],
         inplace=True)
+
+
+
 
     print("fill null values")
     # fill na values
     X_predictors.fillna(value=0, inplace=True)
 
     print("Feature creation finished")
-    return X_predictors, Y
+    return X_predictors, Y, scaler
 
 
 # training flag to define if the call is for training to drop ether the training or the test set

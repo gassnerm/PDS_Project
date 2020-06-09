@@ -11,7 +11,7 @@ from  sklearn.metrics import accuracy_score
 
 
 
-def create_duration_prediction(X_test, y_test):
+def create_duration_prediction(X_test, y_test, scaler):
 
 
     # set to array
@@ -24,14 +24,16 @@ def create_duration_prediction(X_test, y_test):
     # import the models for regression
     lin = read_model(False)
 
-    st_scaler = StandardScaler()
-    st_scaler.fit(X_test)
+    st_scaler = read_model(False)
+
 
     X_test_scaled = st_scaler.transform(X_test)
 
-    # prediction of test set by trained model
+    # prediction of test set by trained model log transform
     model_pre_test = lin.predict(X_test_scaled)
 
+
+    print(model_pre_test.shape, y_test.shape)
 
     print("RMSE: ", np.sqrt(metrics.mean_squared_error(y_test, model_pre_test)))
     print("MAE: ", metrics.mean_absolute_error(y_test, model_pre_test))

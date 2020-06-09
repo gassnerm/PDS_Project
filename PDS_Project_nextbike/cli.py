@@ -56,16 +56,16 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
         # be dropped test set data from past required to predict
         # create prediction for test set for classification
         print("predict classification task")
-        #X_clas, Y_clas = create_predictors.create_predictors_classification(df_tran, False)
-        #prediction.create_classification_prediction(X_clas, Y_clas)
+        X_clas, Y_clas = create_predictors.create_predictors_classification(df_tran, False)
+        prediction.create_classification_prediction(X_clas, Y_clas)
 
         print("predict classificattion ends hier")
 
 
         # create test set predictors duration and create prediction for test set durations
         print("predictor for  trip duration created  Starts hier")
-        X_dura, Y_dura = create_predictors.create_prediction_Duration(df_tran, False)
-        prediction.create_duration_prediction(X_dura, Y_dura)
+        X_dura, Y_dura, scaler = create_predictors.create_prediction_Duration(df_tran, False)
+        prediction.create_duration_prediction(X_dura, Y_dura, scaler)
         print("predictor for trip duration ends hier")
 
     # train the models
@@ -82,21 +82,25 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
         df_test = set_data_frame.create_df(read_file("frankfurt_test.csv"))
         csv_file = csv_file.append(df_test)
 
+
         print("Train nn for classification")
         # create the predictors for classification and set train flag to
         # true to drop the test set after feature creation see above
         X_clas, Y_Class = create_predictors.create_predictors_classification(csv_file, True)
 
+        print(type(Y_Class), type(X_clas))
+
+        print("Predictor sucessful created.")
         # train the model for trip direction and save it
         model.train_nn_classification_task(X_clas, Y_Class)
         print("Train for nn ends sucessfull")
 
 
         # create predictors for trip duration
-        x_duration, y_duration = create_predictors.create_prediction_Duration(csv_file, True)
+        x_duration, y_duration, scaler = create_predictors.create_prediction_Duration(csv_file, True)
 
         # train the model for duration and save it
-        model.train_prediction_duration(x_duration, y_duration)
+        model.train_prediction_duration(x_duration, y_duration, scaler)
 
 if __name__ == '__main__':
     main()

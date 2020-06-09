@@ -25,3 +25,4 @@ def save_model(model, classif_flag):
 
         pickle.dump(model, open(os.path.join(get_data_path(), "..\\output_data\\regression_model.pkl"), 'wb'))
 
+def save_scaler(model, classif_flag):
