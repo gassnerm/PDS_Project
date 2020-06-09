@@ -31,17 +31,18 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
         # if target_file is defined in the command line stored the
         # data in selected path in reference to data folder
         # in that path else it safes the file under data/transform_DF file
-        if target_file == "":
+        if target_file == False:
             # write result df to csv file
             output.write_file("transform_DF", df_tran)
         else:
             output.write_file(target_file, df_tran)
+
+
     # predict model
     if predict:
 
         # read file return data frame object
         df = read_file(csv_file)
-
 
         # created new format df and return it
         # load test data to create features
