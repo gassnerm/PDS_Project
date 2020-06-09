@@ -1,6 +1,6 @@
 # PDS_Project nextbike 
  
-Within the same folder as ```setup.py```run ```pip install .``` to install the package. Use flag ```-e``` to install in development mode. In subdirectory ```notebooks``` run ```pip install ..``` to install the package. Import via ```import nextbike```. 
+Within the same folder as ```setup.py```run ```pip install .``` to install the package. Use flag ```-e``` to install in development mode. In subdirectory ```notebooks``` run ```pip install ..``` to install the package. Import via ```import PDS_Project_nextbike```. 
 
 This package implements a command line interface. 
 Usage is as follows:
