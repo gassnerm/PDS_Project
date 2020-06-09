@@ -25,4 +25,10 @@ def save_model(model, classif_flag):
 
         pickle.dump(model, open(os.path.join(get_data_path(), "..\\output_data\\regression_model.pkl"), 'wb'))
 
-def save_scaler(model, classif_flag):
+def save_scaler(scaler, classif_flag):
+    if classif_flag:
+        print("Scaler safed to scaler_class.pkl")
+        pickle.dump(scaler, open(os.path.join(get_data_path(), "..\\output_data\\scaler_class.pkl"), 'wb'))
+    else:
+        print("Scaler safed to scaler_regression.pkl")
+        pickle.dump(scaler, open(os.path.join(get_data_path(), "..\\output_data\\scaler_regression.pkl"), 'wb'))

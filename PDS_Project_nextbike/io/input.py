@@ -35,4 +35,15 @@ def read_model(classif):
     model = pickle.load(open(path, 'rb'))
     return model
 
+# read scaler for prediction
+def read_scaler(classif):
 
+    if classif:
+        # read model from storage
+        path = os.path.join(os.getcwd() + r"\output_data\scaler_class.pkl")
+    else:
+        # if regression model required
+        path = os.path.join(os.getcwd() + r"\output_data\scaler_regression.pkl")
+
+    model = pickle.load(open(path, 'rb'))
+    return model

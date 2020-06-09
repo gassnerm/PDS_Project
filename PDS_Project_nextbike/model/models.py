@@ -6,14 +6,14 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from sklearn.preprocessing import RobustScaler, PolynomialFeatures
 from sklearn.preprocessing import StandardScaler
-from ..io import save_model
+from ..io import save_model, save_scaler
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
 
 # trains the regression algorithm
-def train_prediction_duration(X_duration, Y_duration, scaler):
+def train_prediction_duration(X_duration, Y_duration):
 
 
     columns = np.array(X_duration.columns).reshape(13,1)
@@ -38,6 +38,7 @@ def train_prediction_duration(X_duration, Y_duration, scaler):
                                                             "MORNING","NIGHT","H1","H2","H3","H4","hourly temperatur"
                                                             ,"L1","L2"], columns=["Coefficient"]))
     print("intercept: ", lin_reg.intercept_)
+    save_scaler(st_scaler, False)
     # save the model to data folder
     save_model(lin_reg, False)
 
@@ -82,7 +83,7 @@ def train_nn_classification_task(x, y):
     model.fit(X_train_scaled, y, batch_size=batch_size, epochs=epochs, validation_split=0.2)
 
     save_model(model, True)
-
+    save_scaler(st_scaler, True)
     # return test set
     return x, y
 

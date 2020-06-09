@@ -119,10 +119,7 @@ def create_prediction_Duration(file, trainingflag):
     X_predictors.drop(columns=["relative humidity", "Rainfall", "SD_SO", "V_VV"], inplace=True)
 
 
-    # get month as parameter
-    #month = pd.get_dummies(X_predictors["month"], drop_first=True)
-    #month.columns = ["FE", "MA", "AP", "MA", "JU", "AU", "SE", "OC", "NO", "DE"]
-    #X_predictors = X_predictors.join(month)
+
 
     # create dates for weekly average
     start = dt.datetime(2019, 1, 20)
@@ -174,10 +171,6 @@ def create_prediction_Duration(file, trainingflag):
         inplace=True)
 
 
-
-    scaler= StandardScaler()
-    scaler.fit(X_predictors.drop(columns=["month","Duration"]))
-
     # if model is trained drop test set after feature creation for predict drop train set
     if trainingflag:
 
@@ -200,7 +193,7 @@ def create_prediction_Duration(file, trainingflag):
     X_predictors.fillna(value=0, inplace=True)
 
     print("Feature creation finished")
-    return X_predictors, Y, scaler
+    return X_predictors, Y
 
 
 # training flag to define if the call is for training to drop ether the training or the test set
