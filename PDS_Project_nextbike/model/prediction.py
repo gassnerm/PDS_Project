@@ -2,7 +2,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn import metrics
 import pandas as pd
-from ..io import read_model, plt, write_file
+from ..io import read_model, plt, write_file, read_scaler
 import numpy as np
 from tensorflow import keras
 import os
@@ -11,7 +11,7 @@ from  sklearn.metrics import accuracy_score
 
 
 
-def create_duration_prediction(X_test, y_test, scaler):
+def create_duration_prediction(X_test, y_test):
 
 
     # set to array
@@ -24,7 +24,7 @@ def create_duration_prediction(X_test, y_test, scaler):
     # import the models for regression
     lin = read_model(False)
 
-    st_scaler = read_model(False)
+    st_scaler = read_scaler(False)
 
 
     X_test_scaled = st_scaler.transform(X_test)
@@ -35,9 +35,11 @@ def create_duration_prediction(X_test, y_test, scaler):
 
     print(model_pre_test.shape, y_test.shape)
 
-    print("RMSE: ", np.sqrt(metrics.mean_squared_error(y_test, model_pre_test)))
-    print("MAE: ", metrics.mean_absolute_error(y_test, model_pre_test))
+    # back transform the ylog transformed values
+    print("RMSE: ", np.sqrt(metrics.mean_squared_error(y_test, np.exp(model_pre_test))))
+    print("MAE: ", metrics.mean_absolute_error(y_test, np.exp(model_pre_test)))
     print("r²: ", metrics.r2_score(y_test, model_pre_test))
+
 
     plt.scatter(model_pre_test, y_test)
 
@@ -50,7 +52,9 @@ def create_classification_prediction(X, Y):
     # read saved model
     model = keras.models.load_model(os.getcwd() + r"\output_data\classif_model.h5")
 
-    st_scaler = StandardScaler()
+
+
+    st_scaler = read_scaler(True)
 
     st_scaler.fit(X)
 
@@ -60,10 +64,6 @@ def create_classification_prediction(X, Y):
     # predict given test set
     y_pred = model.predict(X_test_scaled)
 
-    # print metrics
-    print("RMSE: ", np.sqrt(metrics.mean_squared_error(Y, y_pred)))
-    print("MAE: ", metrics.mean_absolute_error(Y, y_pred))
-    print("r²: ", metrics.r2_score(Y, y_pred))
 
     # get the metrics for the test set
     print(accuracy_score(Y, y_pred.round()))

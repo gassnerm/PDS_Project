@@ -64,8 +64,8 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
 
         # create test set predictors duration and create prediction for test set durations
         print("predictor for  trip duration created  Starts hier")
-        X_dura, Y_dura, scaler = create_predictors.create_prediction_Duration(df_tran, False)
-        prediction.create_duration_prediction(X_dura, Y_dura, scaler)
+        X_dura, Y_dura = create_predictors.create_prediction_Duration(df_tran, False)
+        prediction.create_duration_prediction(X_dura, Y_dura)
         print("predictor for trip duration ends hier")
 
     # train the models
@@ -97,10 +97,10 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
 
 
         # create predictors for trip duration
-        x_duration, y_duration, scaler = create_predictors.create_prediction_Duration(csv_file, True)
+        x_duration, y_duration = create_predictors.create_prediction_Duration(csv_file, True)
 
         # train the model for duration and save it
-        model.train_prediction_duration(x_duration, y_duration, scaler)
+        model.train_prediction_duration(x_duration, y_duration)
 
 if __name__ == '__main__':
     main()
