@@ -173,13 +173,13 @@ def create_prediction_Duration(file, trainingflag):
         inplace=True)
 
     # if model is trained drop test set after feature creation for predict drop train set
-    if trainingflag:
-
-        # drop test set
-        X_predictors = X_predictors[X_predictors["month"] != "07"]
-    else:
-        # drop test set
-        X_predictors = X_predictors[X_predictors["month"] == "07"]
+    # if trainingflag:
+    #
+    #    # drop test set
+    #    X_predictors = X_predictors[X_predictors["month"] != "07"]
+    # else:
+    #    # drop test set
+    #   X_predictors = X_predictors[X_predictors["month"] == "07"]
 
     Y = X_predictors["Duration"]
     X_predictors.drop(
@@ -294,14 +294,14 @@ def create_predictors_classification(file, training_Flag):
 
     # used to decide which mode feature are created for
     # Feature generation of past values requires full data set
-    if training_Flag:
-        print("Info: Training mode drop test set ")
-        # drop test set
-        df = df[df["month"] != 7]
-    else:
-        print("Info: Prediction mode drop training set ")
-        # drop test set
-        df = df[df["month"] == 7]
+    #if training_Flag:
+    #    print("Info: Training mode drop test set ")
+    #    # drop test set
+    #    df = df[df["month"] != 7]
+    #else:
+    #    print("Info: Prediction mode drop training set ")
+    #    # drop test set
+    #     df = df[df["month"] == 7]
 
     # set target values
     target_vector = df["uni"]

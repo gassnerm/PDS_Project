@@ -41,6 +41,7 @@ def train_prediction_duration(X_duration, Y_duration):
 
 def train_nn_classification_task(x, y):
 
+    print(x)
     # initial scale
     st_scaler = StandardScaler()
     st_scaler.fit(x)
