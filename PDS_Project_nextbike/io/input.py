@@ -14,10 +14,11 @@ def read_file(filename):
         # read file create df out of it
         df = pd.read_csv(path, dtype=str, index_col=0)
         return df
-    except FileNotFoundError:
+    except (FileNotFoundError, TypeError) as e:
 
         # file not found catch
-        print("Data file not found. Path was " + filename)
+        print("Data file not found. Path was process terminated.")
+        exit(1)
 
 
 # read model for prediction
