@@ -48,8 +48,10 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
         # created new format df and return it
         # load test data to create features
         df_tran = set_data_frame.create_df(df)
-        df_test = set_data_frame.create_df(read_file("frankfurt.csv"))
-        df_tran = df_tran.append(df_test)
+
+        #df_test = set_data_frame.create_df(read_file("frankfurt.csv"))
+        #df_tran = df_tran.append(df_test)
+
         df_tran.reset_index(inplace=True, drop=True)
         print("predict:", len(df_tran))
 
@@ -81,8 +83,8 @@ def main(train, transform, csv_file, predict, testing_code, target_file):
         print("Load test set to create feature preditore for past values ")
 
         # append test data to create features
-        df_test = set_data_frame.create_df(read_file("frankfurt_test.csv"))
-        csv_file = csv_file.append(df_test)
+        #df_test = set_data_frame.create_df(read_file("frankfurt_test.csv"))
+        #csv_file = csv_file.append(df_test)
 
         print("Train nn for classification")
         # create the predictors for classification and set train flag to
